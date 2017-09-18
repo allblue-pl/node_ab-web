@@ -1,0 +1,7 @@
+{
+  "name": "ab-web",
+  "dependencies": {
+    "chalk": "2.1.*",
+    "less": "2.7.*"
+  }
+}
