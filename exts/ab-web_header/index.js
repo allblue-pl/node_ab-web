@@ -32,9 +32,25 @@ class abWeb_Header extends abWeb.Ext
                 [ null ].concat(args)))());
     }
 
+    addTagGroup(group_id, props = {})
+    {
+        if (!('before' in props)) {
+            this._tags.set(group_id, []);
+            return;
+        }
+
+        let new_tags = new Map();
+        for (let [ t_group_id, group_tags ] of this._tags) {
+            if (props.before.includes(t_group_id))
+                new_tags.set(group_id, []);
+            new_tags.set(group_id, group_tags);
+        }
+    }
+
     clearTags(group_id)
     {
-
+        if (this._tags.has(group_id))
+            this._tags.set(group_id, []);
     }
 
 
@@ -63,26 +79,24 @@ class abWeb_Header extends abWeb.Ext
 
 
     /* abWeb.Ext Overrides */
-    __buildTask(task_name)
+    __build(task_name)
     { let self = this;
-        return new abWeb.Task(task_name, () => {
-                return new Promise((resolve, reject) => {
-            self.console.log('Building start...');
+        return new Promise((resolve, reject) => {
+            self.console.info('Building...');
 
             fs.writeFile(this._filePath, this._getHtml(), (err) => {
                 if (err !== null)
                     reject(err);
 
-                self.console.log('Building finished.');
+                self.console.success('Finished.');
                 resolve();
             });
-        }); });
+        });
     }
 
-    __cleanTask(task_name)
+    __clean(task_name)
     { const self = this;
-        return new abWeb.Task(task_name, () => {
-                return new Promise((resolve, reject) => {
+        return new Promise((resolve, reject) => {
             fs.unlink(self._filePath, (err, stat) => {
                 if (err === null)
                     resolve();
@@ -91,12 +105,7 @@ class abWeb_Header extends abWeb.Ext
                 else
                     reject(err);
             });
-        });});
-    }
-
-    __onChange(fs_paths)
-    {
-
+        });
     }
 
     __parse(config)

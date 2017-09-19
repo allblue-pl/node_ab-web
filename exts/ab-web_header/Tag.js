@@ -14,7 +14,7 @@ class Tag
         if (this.content === null)
             html += ' />';
         else
-            html += '>' + this.content + '</' + this.name + '>' + "\r\n";
+            html += '>' + this.content + '</' + this.name + '>';
 
         return html;
     }

@@ -9,7 +9,7 @@ const chalk = require('chalk');
 // const abFS = require('ab-fs');
 
 
-class abWeb_JS extends abWeb.Ext
+class abWeb_Spocky extends abWeb.Ext
 {
 
     constructor(ab_web, ext_path)
@@ -96,4 +96,4 @@ class abWeb_JS extends abWeb.Ext
     /* / abWeb.Ext Overrides */
 
 }
-module.exports = abWeb_JS;
+module.exports = abWeb_Spocky;
