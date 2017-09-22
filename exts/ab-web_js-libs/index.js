@@ -69,7 +69,10 @@ class abWeb_JSLibs extends abWeb.Ext
         for (let [ lib_name, lib_path ] of this._libPaths)
             lib_promises.push(this._createLib_Promise(lib_name, lib_path));
 
-        return Promise.all(lib_promises);
+        Promise.all(lib_promises)
+            .then(() => {
+                this._header.build();
+            });
         // return new Promise((resolve, reject) => {
         //     Promise.all(lib_promises)
         //         .then((results) => {
