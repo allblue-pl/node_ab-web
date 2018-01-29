@@ -25,7 +25,7 @@ class abWeb_JSLibs extends abWeb.Ext
 
     _createLib_Promise(lib_name, lib_path)
     {
-        new Promise((resolve, reject) => {
+        return new Promise((resolve, reject) => {
             jsLibs.build(lib_name, lib_path, path.join(
                     this._buildPath, lib_name), (err, built_file_paths) => {
                 if (err !== null) {
@@ -69,8 +69,13 @@ class abWeb_JSLibs extends abWeb.Ext
         for (let [ lib_name, lib_path ] of this._libPaths)
             lib_promises.push(this._createLib_Promise(lib_name, lib_path));
 
-        Promise.all(lib_promises)
+        return Promise.all(lib_promises)
             .then(() => {
+                this.console.log('Libs:');
+                for (let [ lib_name, lib_path ] of this._libPaths) {
+                    this.console.log(` - ${lib_name}`);
+                }
+
                 this._header.build();
             });
         // return new Promise((resolve, reject) => {
