@@ -4,7 +4,7 @@ const fs = require('fs');
 const path = require('path');
 
 const abFS = require('ab-fs');
-const abWeb = require('ab-web');
+const abWeb = require('../../.');
 const less = require('less');
 
 

@@ -3,7 +3,7 @@
 const fs = require('fs');
 const path = require('path');
 
-const abWeb = require('ab-web');
+const abWeb = require('../../.');
 const chalk = require('chalk');
 
 // const abFS = require('ab-fs');
@@ -39,7 +39,7 @@ class abWeb_Spocky extends abWeb.Ext
     { let self = this;
         self.console.info('Building...');
 
-        self._header.clearTags('js');
+        self._header.clearTags('spocky');
 
         self.console.log('Scripts:');
         for (let fs_path of this._fsPaths) {
@@ -48,7 +48,7 @@ class abWeb_Spocky extends abWeb.Ext
             let uri = self.buildInfo.base + rel_path + '?v=' +
                     self.buildInfo.hash;
 
-            self._header.addTag('js', 'script', {
+            self._header.addTag('spocky', 'script', {
                 src: uri,
                 type: 'text/javascript',
             }, '');

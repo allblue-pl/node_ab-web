@@ -1,6 +1,6 @@
 'use strict';
 
-const abTypes = require('ab-types');
+const js0 = require('js0');
 
 
 class Tag
@@ -8,8 +8,8 @@ class Tag
 
     get html() {
         var html = '<' + this.name;
-        for (var attrib_name in this.attribs)
-            html += ' ' + attrib_name + '="' + this.attribs[attrib_name] + '"';
+        for (var attribName in this.attribs)
+            html += ' ' + attribName + '="' + this.attribs[attribName] + '"';
 
         if (this.content === null)
             html += ' />';
@@ -22,7 +22,7 @@ class Tag
 
     constructor(name, attribs, content = null)
     {
-        abTypes.args(arguments, 'string', 'object', 'string');
+        js0.args(arguments, 'string', 'object', [ 'string', js0.Default ]);
 
         this.name = name,
         this.attribs = JSON.parse(JSON.stringify(attribs));

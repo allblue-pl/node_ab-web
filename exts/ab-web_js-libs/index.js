@@ -3,7 +3,7 @@
 const fs = require('fs');
 const path = require('path');
 
-const abWeb = require('ab-web');
+const abWeb = require('../../.');
 const jsLibs = require('js-libs');
 
 
@@ -13,6 +13,7 @@ class abWeb_JSLibs extends abWeb.Ext
     constructor(ab_web, ext_path)
     { super(ab_web, ext_path);
         this._header = this.uses('header');
+
         this._scriptPath = null;
         this._buildPath = null;
 
@@ -23,30 +24,30 @@ class abWeb_JSLibs extends abWeb.Ext
         });
     }
 
-    _createLib_Promise(lib_name, lib_path)
+    _createLib_Promise(libName, libPath)
     {
         return new Promise((resolve, reject) => {
-            jsLibs.build(lib_name, lib_path, path.join(
-                    this._buildPath, lib_name), (err, built_file_paths) => {
+            jsLibs.build(libName, libPath, path.join(
+                    this._buildPath, libName), (err, builtFilePaths) => {
                 if (err !== null) {
-                    this.console.error(`Error when building \`${lib_name}\`.`,
+                    this.console.error(`Error when building \`${libName}\`.`,
                             err.stack);
 
                     reject(err);
                     return;
                 }
 
-                let built_uris = built_file_paths.map((file_path) =>
-                        this.uri(file_path));
+                let buildUris = builtFilePaths.map((filePath) =>
+                        this.uri(filePath));
 
-                for (let built_uri of built_uris) {
+                for (let buildUri of buildUris) {
                     this._header.addTag('js-libs', 'script', {
-                        src: built_uri,
+                        src: buildUri,
                         type: 'text/javascript',
                     }, '');
                 }
 
-                this.console.success(`\`${lib_name}\` built.`);
+                this.console.success(`\`${libName}\` built.`);
                 resolve();
             });
         });
@@ -66,14 +67,14 @@ class abWeb_JSLibs extends abWeb.Ext
         }, '');
 
         let lib_promises = [];
-        for (let [ lib_name, lib_path ] of this._libPaths)
-            lib_promises.push(this._createLib_Promise(lib_name, lib_path));
+        for (let [ libName, libPath ] of this._libPaths)
+            lib_promises.push(this._createLib_Promise(libName, libPath));
 
         return Promise.all(lib_promises)
             .then(() => {
                 this.console.log('Libs:');
-                for (let [ lib_name, lib_path ] of this._libPaths) {
-                    this.console.log(` - ${lib_name}`);
+                for (let [ libName, libPath ] of this._libPaths) {
+                    this.console.log(` - ${libName}`);
                 }
 
                 this._header.build();
@@ -111,12 +112,12 @@ class abWeb_JSLibs extends abWeb.Ext
 
         let libs = config.libs;
         this._libPaths = new Map();
-        for (let lib_name in config.libs) {
-            let lib_path = path.join(config.libs[lib_name], 'js-lib');
-            this._libPaths.set(lib_name, lib_path);
+        for (let libName in config.libs) {
+            let libPath = path.join(config.libs[libName], 'js-lib');
+            this._libPaths.set(libName, libPath);
 
-            this.watch(lib_name, [ 'add', 'unlink', 'change' ], path.join(
-                    lib_path, '**/*.js'));
+            this.watch(libName, [ 'add', 'unlink', 'change' ], path.join(
+                    libPath, '**/*.js'));
         }
 
         this.build();
