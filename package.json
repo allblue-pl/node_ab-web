@@ -1,14 +1,14 @@
 {
   "name": "ab-web",
   "dependencies": {
+    "ab-log": "1.0.*",
     "ab-fs": "0.0.*",
-    "ab-fs-matcher": "0.0.*",
-    "ab-fs-watcher": "0.0.*",
     "ab-tasks": "0.0.*",
     "chalk": "2.1.*",
+    "js-libs": "0.0.1",
     "js0": "0.0.*",
-    "js-libs": "0.0.*",
-    "less": "2.7.*"
+    "less": "2.7.*",
+    "node-sass": "^4.7.2"
   },
   "version": "0.0.1"
 }

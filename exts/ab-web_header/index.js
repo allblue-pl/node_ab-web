@@ -3,6 +3,7 @@
 const fs = require('fs');
 const path = require('path');
 
+const abFS = require('ab-fs');
 const abWeb = require('../../.');
 
 const Tag = require('./Tag');
@@ -85,6 +86,9 @@ class abWeb_Header extends abWeb.Ext
     { let self = this;
         return new Promise((resolve, reject) => {
             self.console.info('Building...');
+
+            if (!abFS.existsDirSync(path.dirname(this._filePath)))
+                abFS.mkdirRecursiveSync(path.dirname(this._filePath));
 
             fs.writeFile(this._filePath, this._getHtml(), (err) => {
                 if (err !== null)
