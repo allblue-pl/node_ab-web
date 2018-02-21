@@ -1,6 +1,6 @@
 {
   "name": "ab-web",
-  "version": "0.0.3",
+  "version": "0.0.4",
   "dependencies": {
     "ab-log": "1.0.*",
     "ab-fs": "0.0.*",
