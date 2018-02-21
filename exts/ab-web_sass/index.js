@@ -15,12 +15,18 @@ class abWeb_Sass extends abWeb.Ext
     { super(ab_web, extPath);
         this._header = this.uses('header');
 
-        this._source = '';
-        this._sourcePath = path.join(this.buildInfo.front, 'css');
+        this.cssDir = path.join(this.buildInfo.front, 'css');
+        if (!abFS.dir.existsSync(this.cssDir)) {
+            this.console.warn(`\`${this.cssDir}\` does not exist. Creating...`);
+            abFS.dir.createRecursiveSync(this.cssDir);
+        }
+
+        this._sourceDirPath = this.cssDir;
+        this._sourcePath = path.join(this.cssDir, 'sass.css');
 
         this._header.addTag('sass', 'link', {
             rel: "stylesheet",
-            href: this.uri(path.join(this._sourcePath, 'sass.css'), true),
+            href: this.uri(this._sourcePath, true),
             type: "text/css"
         });
     }
@@ -28,13 +34,7 @@ class abWeb_Sass extends abWeb.Ext
 
     _createCss(cssSource)
     {
-        let cssDir = path.join(this.buildInfo.front, 'css');
-        let cssPath = path.join(cssDir, 'sass.css');
-
-        if (!abFS.dir.existsSync(cssDir)) {
-            this.console.warn(`\`${cssDir}\` does not exist. Creating...`);
-            abFS.dir.createRecursiveSync(cssDir);
-        }
+        let cssPath = path.join(this.cssDir, 'sass.css');
 
         let index_path = this.buildInfo.index;
 
@@ -58,8 +58,8 @@ class abWeb_Sass extends abWeb.Ext
 
         this.console.log('Variables:');
         let variablePaths = fsPaths.variables;
-        for (let variable_fsPath of fsPaths.variables) {
-            let relativePath = path.relative(this._sourcePath, variable_fsPath);
+        for (let variables_FSPath of fsPaths.variables) {
+            let relativePath = path.relative(this._sourceDirPath, variables_FSPath);
             relativePath = relativePath.replace(/\\/g, '/');
 
             sassSource += '@import "' + relativePath + '";\r\n';
@@ -69,8 +69,8 @@ class abWeb_Sass extends abWeb.Ext
         sassSource += '\r\n';
 
         this.console.log('Styles:');
-        for (let styles_fsPath of fsPaths.styles) {
-            let relativePath = path.relative(this._sourcePath, styles_fsPath);
+        for (let styles_FSPath of fsPaths.styles) {
+            let relativePath = path.relative(this._sourceDirPath, styles_FSPath);
             relativePath = relativePath.replace(/\\/g, '/');
 
             sassSource += '@import "' + relativePath + '";\r\n';
@@ -79,6 +79,69 @@ class abWeb_Sass extends abWeb.Ext
         }
 
         return sassSource;
+    }
+
+    _parseSource(url, prev, done)
+    {
+        let urlPath = path.join(this._sourceDirPath, url);
+        if (path.extname(urlPath) !== '.scss')
+            urlPath += '.scss';
+
+        let urlPath_Dir = path.dirname(urlPath);
+        let urlPath_Base = path.basename(urlPath);
+
+        if (!fs.existsSync(urlPath))
+            urlPath = path.join(urlPath_Dir, '_' + urlPath_Base);
+        if (!fs.existsSync(urlPath)) {
+            this.console.error(`File '${url}' imported in '${prev}' does not exist.`);
+            done({ contents: '' });
+            return;
+        }
+
+        fs.readFile(urlPath, (err, data) => {
+            if (err) {
+                this.console.error('Cannot read file: ', url);
+                done({ contents: '' });
+                return;
+            }
+
+            let sass = data.toString();
+
+            sass = sass.replace(/@import\s*([\'"])\s*/g, '@import $1' + 
+                    path.dirname(url) + '/');
+
+            let relation = path.relative(this._sourceDirPath, 
+                    path.dirname(urlPath)).replace(/\\/g, '/');
+            sass = sass.replace(/url\(\s*([\'"])(?!(?:https?:)?\/\/)(?!data:)\s*/g, 
+                    'url($1' + relation + '/');
+            // sass = sass.replace(/url\((?!\s*[\'"])\s*/g, 
+            //         `url('${relation}/' + `);
+
+            done({ contents: sass });
+        });
+    }
+
+    _replaceRelativeUrls_ParseUrlPath(urlPaths, url, prev)
+    {
+        let prevPath = null;
+
+        for (let i = urlPaths.length - 1; i >= 0; i--) {
+            if (urlPaths[i].url === prev) {
+                prevPath = urlPaths[i].path;
+                break;
+            }
+        }
+        if (prevPath === null)
+            prevPath = path.resolve(prev);
+
+        let urlPath = path.join(path.dirname(prevPath), url);
+
+        urlPaths.push({
+            url: url,
+            path: urlPath,
+        });
+
+        return urlPath;
     }
 
 
@@ -96,10 +159,14 @@ class abWeb_Sass extends abWeb.Ext
                 dump_line_numbers = null
             }
 
+            let urlPaths = [];
             nodeSass.render({
                 data: this._source,
-                file: 'source.scss',
-                includePaths: [ this._sourcePath ],
+                file: this._sourcePath,
+                includePaths: [ this._sourceDirPath ],
+                importer: (url, prev, done) => {                    
+                    return this._parseSource(url, prev, done);
+                },
             }, (err, result) => {
                 if (err) {
                     this.console.error('Error compiling sass.');
@@ -157,15 +224,20 @@ class abWeb_Sass extends abWeb.Ext
         if (!('paths' in config))
             return;
 
-        let variablePaths = [];
-        let styles_paths = [];
+        let variablesPaths = [];
+        let stylesPaths = [];
         for (let fsPath of config.paths) {
-            variablePaths.push(path.join(fsPath, 'variables.scss'));
-            styles_paths.push(path.join(fsPath, 'styles.scss'));
+            if (path.extname(fsPath) === '.scss')
+                stylesPaths.push(fsPath);
+            else if (path.extname(fsPath) === '') {
+                variablesPaths.push(path.join(fsPath, 'variables.scss'));
+                stylesPaths.push(path.join(fsPath, 'styles.scss'));
+            } else
+                this.error('Unknown extension type: ', fsPath);
         }
 
-        this.watch('variables', [ 'add', 'unlink', 'change' ], variablePaths);
-        this.watch('styles', [ 'add', 'unlink', 'change' ], styles_paths);
+        this.watch('variables', [ 'add', 'unlink', 'change' ], variablesPaths);
+        this.watch('styles', [ 'add', 'unlink', 'change' ], stylesPaths);
     }
     /* / abWeb.Ext Overrides */
 
