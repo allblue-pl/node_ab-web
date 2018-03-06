@@ -66,11 +66,11 @@ class abWeb_JSLibs extends abWeb.Ext
             type: 'text/javascript',
         }, '');
 
-        let lib_promises = [];
+        let libPromises = [];
         for (let [ libName, libPath ] of this._libPaths)
-            lib_promises.push(this._createLib_Promise(libName, libPath));
+            libPromises.push(this._createLib_Promise(libName, libPath));
 
-        return Promise.all(lib_promises)
+        return Promise.all(libPromises)
             .then(() => {
                 this.console.log('Libs:');
                 for (let [ libName, libPath ] of this._libPaths) {
@@ -80,7 +80,7 @@ class abWeb_JSLibs extends abWeb.Ext
                 this._header.build();
             });
         // return new Promise((resolve, reject) => {
-        //     Promise.all(lib_promises)
+        //     Promise.all(libPromises)
         //         .then((results) => {
         //             console.log('Here', results);
         //             for (let result of results) {
@@ -104,7 +104,12 @@ class abWeb_JSLibs extends abWeb.Ext
 
     __parse(config)
     {
+        if (!fs.existsSync(config.path)) {
+            this.console.error(`'path' in config does not exist: '${config.path}'.`);
+            return;
+        }
         this._scriptPath = config.path;
+
         this._buildPath = config.build.dev;
 
         if (!('libs' in config))
@@ -114,6 +119,12 @@ class abWeb_JSLibs extends abWeb.Ext
         this._libPaths = new Map();
         for (let libName in config.libs) {
             let libPath = path.join(config.libs[libName], 'js-lib');
+            if (!fs.existsSync(libPath)) {
+                this.console.error(`Libs '${libName}' path does not exist: '${libPath}'.`);
+                continue;
+            }
+
+
             this._libPaths.set(libName, libPath);
 
             this.watch(libName, [ 'add', 'unlink', 'change' ], path.join(
