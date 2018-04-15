@@ -4,11 +4,11 @@
   "dependencies": {
     "ab-fs": "0.0.*",
     "ab-log": "1.0.*",
-    "ab-tasks": "0.0.*",
+    "ab-tasks": "0.0.3",
     "ab-xml-parser": "0.0.*",
     "chalk": "2.1.*",
-    "js-libs": "0.0.*",
-    "js0": "0.0.*",
+    "js-libs": "0.0.3",
+    "js0": "0.0.2",
     "less": "2.7.*",
     "node-sass": "4.7.*"
   }
