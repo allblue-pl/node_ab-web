@@ -11,8 +11,8 @@ const nodeSass = require('node-sass');
 class abWeb_Sass extends abWeb.Ext
 {
 
-    constructor(ab_web, extPath)
-    { super(ab_web, extPath);
+    constructor(abWeb, extPath)
+    { super(abWeb, extPath);
         this._header = this.uses('header');
 
         this.cssDir = path.join(this.buildInfo.front, 'css');
@@ -29,6 +29,9 @@ class abWeb_Sass extends abWeb.Ext
             href: this.uri(this._sourcePath, true),
             type: "text/css"
         });
+
+        this._variablesPaths = [];
+        this._stylesPaths = [];
     }
 
 
@@ -84,7 +87,7 @@ class abWeb_Sass extends abWeb.Ext
     _parseSource(url, prev, done)
     {
         let urlPath = path.join(this._sourceDirPath, url);
-        if (path.extname(urlPath) !== '.scss')
+        if (path.extname(urlPath) !== '.scss' && path.extname(urlPath) !== '.css')
             urlPath += '.scss';
 
         let urlPath_Dir = path.dirname(urlPath);
@@ -146,17 +149,17 @@ class abWeb_Sass extends abWeb.Ext
 
 
     /* abWeb.Ext Overrides */
-    __build(task_name)
+    __build(taskName)
     {
         return new Promise((resolve, reject) => {
             this.console.info('Building...');
 
             let compress = false;
-            let dump_line_numbers = 'comments';
+            let dumpLineNumbers = 'comments';
 
             if (this.buildInfo.type('rel')) {
                 compress = true;
-                dump_line_numbers = null
+                dumpLineNumbers = null
             }
 
             let urlPaths = [];
@@ -190,7 +193,7 @@ class abWeb_Sass extends abWeb.Ext
             //     paths: [ this._sourcePath ],
             //     filename: 'source.less',
             //     compress: compress,
-            //     dumpLineNumbers: dump_line_numbers,
+            //     dumpLineNumbers: dumpLineNumbers,
             //     relativeUrls: true
             // },(err, output) => {
             //     if (err) {
@@ -213,8 +216,8 @@ class abWeb_Sass extends abWeb.Ext
         });
     }
 
-    __onChange(fsPaths, watcher_name, event_type)
-    {
+    __onChange(fsPaths, watcherName, eventType)
+    {        
         this._source = this._getSource(fsPaths);
         this.build();
     }
@@ -224,20 +227,26 @@ class abWeb_Sass extends abWeb.Ext
         if (!('paths' in config))
             return;
 
-        let variablesPaths = [];
-        let stylesPaths = [];
+        this._variablesPaths = [];
+        this._stylesPaths = [];
+        let watchPaths = [];
         for (let fsPath of config.paths) {
-            if (path.extname(fsPath) === '.scss')
-                stylesPaths.push(fsPath);
-            else if (path.extname(fsPath) === '') {
-                variablesPaths.push(path.join(fsPath, 'variables.scss'));
-                stylesPaths.push(path.join(fsPath, 'styles.scss'));
+            if (path.extname(fsPath) === '.scss' || path.extname(fsPath) === '.css') {
+                this._stylesPaths.push(fsPath);
+
+                watchPaths = path.join(path.dirname(fsPath), '*.*css');
+            } else if (path.extname(fsPath) === '') {
+                this._variablesPaths.push(path.join(fsPath, 'variables.scss'));
+                this._stylesPaths.push(path.join(fsPath, 'styles.scss'));
+
+                watchPaths = path.join(fsPath, '*.*css');
             } else
-                this.error('Unknown extension type: ', fsPath);
+                this.console.error('Unknown extension type: ', fsPath);
         }
 
-        this.watch('variables', [ 'add', 'unlink', 'change' ], variablesPaths);
-        this.watch('styles', [ 'add', 'unlink', 'change' ], stylesPaths);
+        this.watch('scss', [ 'add', 'unlink', 'change' ], watchPaths);
+        this.watch('variables', [ 'add', 'unlink', 'change' ], this._variablesPaths);
+        this.watch('styles', [ 'add', 'unlink', 'change' ], this._stylesPaths)
     }
     /* / abWeb.Ext Overrides */
 

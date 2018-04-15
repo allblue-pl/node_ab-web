@@ -38,7 +38,7 @@ class abWeb_JSLibs extends abWeb.Ext
                 }
 
                 let buildUris = builtFilePaths.map((filePath) =>
-                        this.uri(filePath));
+                        this.uri(filePath, true));
 
                 for (let buildUri of buildUris) {
                     this._header.addTag('js-libs', 'script', {

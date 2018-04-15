@@ -1,12 +1,15 @@
 'use strict';
 
-const fs = require('fs');
-const path = require('path');
+const 
+    fs = require('fs'),
+    path = require('path'),
 
-const abFS = require('ab-fs');
-const abWeb = require('../../.');
+    abFS = require('ab-fs'),
+    abWeb = require('../../.'),
+    js0 = require('js0'),
 
-const Tag = require('./Tag');
+    Tag = require('./Tag')
+;
 // const abFS = require('ab-fs');
 
 
@@ -18,40 +21,78 @@ class abWeb_Header extends abWeb.Ext
         Object.defineProperties(this, {
             _filePath: { value: path.join(this.buildInfo.back, 'header.html'), },
 
-            _tags: { value: new Map(), },
-        })
-
+            _tagsGroups: { value: new js0.List(), },
+        });
     }
 
     addTag(groupId, ...args)
     {
-        if (!this._tags.has(groupId))
-            this._tags.set(groupId, []);
+        if (!this._tagsGroups.has(groupId))
+            this.addTagGroup(groupId);
 
-        let tagsGroup = this._tags.get(groupId);
-        tagsGroup.push(new (Function.prototype.bind.apply(Tag,
+        let tagsGroup = this._tagsGroups.get(groupId);
+        tagsGroup.tags.push(new (Function.prototype.bind.apply(Tag,
                 [ null ].concat(args)))());
     }
 
     addTagGroup(groupId, props = {})
     {
-        if (!('before' in props)) {
-            this._tags.set(groupId, []);
-            return;
+        if (this._tagsGroups.has(groupId))
+            this.console.warn(`Tag group '${groupId}' already exists.`);
+        else
+            this._tagsGroups.set(groupId, { tags: [], before: [], after: [] });
+
+        if ('before' in props) {
+            this._tagsGroups.get(groupId).before = this._tagsGroups.get(groupId)
+                    .before.concat(props.before);
         }
 
-        let newTags = new Map();
-        for (let [ t_groupId, groupTags ] of this._tags) {
-            if (props.before.includes(t_groupId))
-                newTags.set(groupId, []);
-            newTags.set(groupId, groupTags);
+        if ('after' in props) {
+            this._tagsGroups.get(groupId).after = this._tagsGroups.get(groupId)
+                    .after.concat(props.after);
         }
+
+        // if (!('before' in props)) {
+        //     this._tagsGroups.set(groupId, []);
+        //     return;
+        // }
+
+        // let newTags = new Map();
+        // for (let [ t_groupId, groupTags ] of this._tags) {
+        //     if (props.before.includes(t_groupId))
+        //         newTags.set(groupId, []);
+        //     newTags.set(groupId, groupTags);
+        // }
     }
 
     clearTags(groupId)
     {
-        if (this._tags.has(groupId))
-            this._tags.set(groupId, []);
+        if (this._tagsGroups.has(groupId))
+            this._tagsGroups.get(groupId).tags = [];
+    }
+
+    getHtml()
+    {
+        /* Sort */
+        let tagsGroups = new js0.List(this._tagsGroups);
+        tagsGroups.sort((a, b) => {
+            if (a.value.before.includes(b.key) || b.value.after.includes(a.key))
+                return -1;
+            if (b.value.before.includes(a.key) || a.value.after.includes(b.key))
+                return 1;
+
+            return 0;
+        });
+
+        /* Html */
+        var html = '';
+        for (let [ tagsGroupId, tagsGroup ] of tagsGroups) {            
+            html += `<!-- ${tagsGroupId} -->\r\n`;
+            for (let tag of tagsGroup.tags)
+                html += tag.html + '\r\n';
+        }
+
+        return html;
     }
 
 
@@ -68,18 +109,6 @@ class abWeb_Header extends abWeb.Ext
         return true;
     }
 
-    _getHtml()
-    {
-        var html = '';
-        for (let [ tagsGroupId, tagsGroup ] of this._tags) {
-            html += `<!-- ${tagsGroupId} -->\r\n`;
-            for (let tag of tagsGroup)
-                html += tag.html + '\r\n';
-        }
-
-        return html;
-    }
-
 
     /* abWeb.Ext Overrides */
     __build(taskName)
@@ -90,7 +119,7 @@ class abWeb_Header extends abWeb.Ext
             if (!abFS.existsDirSync(path.dirname(this._filePath)))
                 abFS.mkdirRecursiveSync(path.dirname(this._filePath));
 
-            fs.writeFile(this._filePath, this._getHtml(), (err) => {
+            fs.writeFile(this._filePath, this.getHtml(), (err) => {
                 if (err !== null)
                     reject(err);
 

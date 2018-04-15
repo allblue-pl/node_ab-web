@@ -17,6 +17,8 @@ class abWeb_JS extends abWeb.Ext
         this._header = this.uses('header');
 
         this._fsPaths = new Set();
+
+        this._header.addTagGroup('js');
     }
 
 
@@ -36,40 +38,40 @@ class abWeb_JS extends abWeb.Ext
 
     /* abWeb.Ext Overrides */
     __build(task_name)
-    { let self = this;
-        self.console.info('Building...');
+    {
+        this.console.info('Building...');
 
-        self._header.clearTags('js');
+        this._header.clearTags('js');
 
-        self.console.log('Scripts:');
+        this.console.log('Scripts:');
         for (let fs_path of this._fsPaths) {
-            let rel_path = path.relative(self.buildInfo.index, fs_path)
+            let relPath = path.relative(this.buildInfo.index, fs_path)
                     .replace(/\\/g, '/');
-            let uri = self.buildInfo.base + rel_path + '?v=' +
-                    self.buildInfo.hash;
+            let uri = this.buildInfo.base + relPath + '?v=' +
+                    this.buildInfo.hash;
 
-            self._header.addTag('js', 'script', {
+            this._header.addTag('js', 'script', {
                 src: uri,
                 type: 'text/javascript',
             }, '');
 
-            self.console.log('    - ' + rel_path);
+            this.console.log('    - ' + relPath);
         }
 
-        self.console.success('Finished.');
-        self._header.build();
+        this.console.success('Finished.');
+        this._header.build();
     }
 
     __clean(task_name)
-    { const self = this;
+    {
         return null;
     }
 
-    __onChange(fs_paths, event_types)
+    __onChange(fsPaths, eventTypes)
     {
         if (this.buildInfo.type('dev')) {
-            if (!this._compareSets(fs_paths.files, this._fsPaths)) {
-                this._fsPaths = new Set(fs_paths.files);
+            if (!this._compareSets(fsPaths.files, this._fsPaths)) {
+                this._fsPaths = new Set(fsPaths.files);
                 this.build();
             }
         }

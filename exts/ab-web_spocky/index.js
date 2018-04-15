@@ -1,97 +1,130 @@
 'use strict';
 
-const fs = require('fs');
-const path = require('path');
+const 
+    fs = require('fs'),
+    path = require('path'),
 
-const abWeb = require('../../.');
-const chalk = require('chalk');
+    abWeb = require('../..'),
+    js0 = require('js0'),
 
-// const abFS = require('ab-fs');
-
+    LayoutBuilder = require('./LayoutBuilder')
+;
 
 class abWeb_Spocky extends abWeb.Ext
 {
 
-    constructor(ab_web, ext_path)
-    { super(ab_web, ext_path);
+    constructor(abWeb, extPath)
+    { super(abWeb, extPath);
         this._header = this.uses('header');
 
-        this._fsPaths = new Set();
-    }
+        this._modulePath = null;
 
+        this._layoutPaths = [];
+        this._layoutPaths_ToBuild = new js0.List();
+        this._modulePaths = [];
 
-    _compareSets(set_a, set_b)
-    {
-        if (set_a.size !== set_b.size)
-            return false;
-
-        for (let item_a of set_a) {
-            if (!set_b.has(item_a))
-                return false;
-        }
-
-        return true;
+        this._header.addTagGroup('spocky', {
+            
+        });
     }
 
 
     /* abWeb.Ext Overrides */
-    __build(task_name)
-    { let self = this;
-        self.console.info('Building...');
-
-        self._header.clearTags('spocky');
-
-        self.console.log('Scripts:');
-        for (let fs_path of this._fsPaths) {
-            let rel_path = path.relative(self.buildInfo.index, fs_path)
-                    .replace(/\\/g, '/');
-            let uri = self.buildInfo.base + rel_path + '?v=' +
-                    self.buildInfo.hash;
-
-            self._header.addTag('spocky', 'script', {
-                src: uri,
-                type: 'text/javascript',
-            }, '');
-
-            self.console.log('    - ' + rel_path);
-        }
-
-        self.console.success('Finished.');
-        self._header.build();
-    }
-
-    __clean(task_name)
-    { const self = this;
-        return null;
-    }
-
-    __onChange(fs_paths, event_types)
+    __build(taskName)
     {
-        if (this.buildInfo.type('dev')) {
-            if (!this._compareSets(fs_paths.files, this._fsPaths)) {
-                this._fsPaths = new Set(fs_paths.files);
-                this.build();
-            }
+        this.console.info('Building...');   
+
+        let layoutPaths = [];
+        for (let [ i, layoutPath ] of this._layoutPaths_ToBuild) {
+            if (!layoutPaths.includes(layoutPath))
+                layoutPaths.push(layoutPath);
         }
+
+        let buildLayoutPromises = [];    
+        for (let layoutPath of layoutPaths) {
+            this._layoutPaths_ToBuild.remove(layoutPath);
+
+            buildLayoutPromises.push((async () => {
+                try {
+                    LayoutBuilder.Build(layoutPath);
+                } catch (err) {
+                    this.console.error(`Cannot parse '${layoutPath}':`);
+                    this.console.warn(err);
+                    return;
+                }
+
+                let relLayoutPath = path.relative(this.buildInfo.index, layoutPath)
+                        .replace(/\\/g, '/');
+                this.console.log('Built: ', relLayoutPath);
+            })());
+        }
+
+        return Promise.all(buildLayoutPromises)
+            .then(() => {
+                this._header.clearTags('spocky');
+
+                this._header.addTag('spocky', 'script', {
+                    src: this.uri(path.join(this._modulePath, 'js/spocky.js')),
+                    type: 'text/javascript',
+                }, '');
+
+                for (let layoutPath of this._layoutPaths) {
+                    let builtLayoutPath = path.join(path.dirname(layoutPath), 
+                            path.basename(layoutPath, '.html') + '.js');
+
+                    this._header.addTag('spocky', 'script', {
+                        src: this.uri(builtLayoutPath),
+                        type: 'text/javascript',
+                    }, '');
+                }
+
+                for (let modulePath of this._modulePaths) {
+                    this._header.addTag('spocky', 'script', {
+                        src: this.uri(modulePath),
+                        type: 'text/javascript',
+                    }, '');
+                }
+            })
+            .then(() => {
+                this.console.success('Finished.');
+            });
+    }
+
+    __onChange(fsPaths, changes)
+    {
+        this._layoutPaths = fsPaths.layouts;
+        if ('layouts' in changes)
+            this._layoutPaths_ToBuild.addAll(changes.layouts);
+
+        this._modulePaths = fsPaths.modules;
+        // if ('layouts' in changes) {
+        //     for (let i = 0; i < )
+        // }
+
+        this.build();
     }
 
     __parse(config)
     {
-        // abWeb.types.conf(config, {
-        //     'paths':  {
-        //         required: false,
-        //         type: 'array',
-        //     },
-        // });
+        if (!('packages' in config))
+            return;
 
-        if ('paths' in config) {
-            if (this.buildInfo.type('dev'))
-                this.watch('files', [ 'add', 'unlink' ], config.paths);
-            else if (this.buildInfo.type('rel'))
-                this.watch('files', [ 'add', 'unlink', 'change' ], config.paths);
+        if (!('path' in config)) {
+            this.console.error('Spockies module path not set.');
+            return;
         }
 
-        this.build();
+        this._modulePath = config.path;
+
+        let layoutPaths = [];
+        let modulePaths = [];
+        for (let fsPath of config.packages) {
+            layoutPaths.push(path.join(fsPath, 'layouts/*.html'));
+            modulePaths.push(path.join(fsPath, '*.js'));
+        }
+
+        this.watch('layouts', [ 'add', 'unlink', 'change' ], layoutPaths);
+        this.watch('modules', [ 'add', 'unlink', 'change' ], modulePaths);
     }
     /* / abWeb.Ext Overrides */
 
