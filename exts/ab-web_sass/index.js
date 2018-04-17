@@ -39,18 +39,29 @@ class abWeb_Sass extends abWeb.Ext
     {
         let cssPath = path.join(this.cssDir, 'sass.css');
 
-        let index_path = this.buildInfo.index;
+        // let indexPath = this.buildInfo.index;
 
-        /* Replace `url` */
-        let index_path_re = index_path
-            .replace(/\./gm, '\\.')
-            .replace(/\//gm, '(\\/|\\\\)')
-            .replace(/\\/gm, '(\\/|\\\\)');
-        let index_uri_replace = './' + path.relative(this._sourcePath,
-                index_path).replace(/\\/g, '/');
+        // /* Replace `url` */
+        // let indexPathRe = indexPath
+        //     .replace(/\./gm, '\\.')
+        //     .replace(/\//gm, '(\\/|\\\\)')
+        //     .replace(/\\/gm, '(\\/|\\\\)');
+        // let indexUriReplace = './' + path.relative(this._sourcePath,
+        //         indexPath).replace(/\\/g, '/');
 
-        let re = new RegExp('url\\((\'|")' + index_path_re, 'gm');
-        cssSource = cssSource.replace(re, "url($1" + index_uri_replace);
+        // console.log(indexUriReplace);
+        // console.log(indexPathRe);
+        
+        // let re = new RegExp('url\\((\'|")' + indexPathRe, 'gm');
+        // while(true) {
+        //     let match = re.exec(cssSource);
+        //     console.log(match);
+        //     if (match === null)
+        //         break;
+
+        //     console.log(indexUriReplace, match); 
+        // }
+        // cssSource = cssSource.replace(re, "url($1" + indexUriReplace);
 
         fs.writeFileSync(cssPath, cssSource);
     }
@@ -112,15 +123,33 @@ class abWeb_Sass extends abWeb.Ext
 
             sass = sass.replace(/@import\s*([\'"])\s*/g, '@import $1' + 
                     path.dirname(url) + '/');
+        
+            let relativeSass = '';
 
-            let relation = path.relative(this._sourceDirPath, 
-                    path.dirname(urlPath)).replace(/\\/g, '/');
-            sass = sass.replace(/url\(\s*([\'"])(?!(?:https?:)?\/\/)(?!data:)\s*/g, 
-                    'url($1' + relation + '/');
+            let regex = /url\(\s*([\'"])(?!(?:https?:)?\/\/)(?!data:)(.*?)([\'"])\s*\)/gm;
+            let regexIndex = 0;
+            while (true) {
+                let match = regex.exec(sass);
+                if (match === null)
+                    break;
+
+                relativeSass += sass.substring(regexIndex, match.index);
+
+                let matchPath = path.join(path.dirname(urlPath), match[2]);
+                let relation = path.relative(this._sourceDirPath, matchPath)
+                        .replace(/\\/g, '/');
+
+                relativeSass += `url(${match[1]}${relation}${match[3]})`;
+                regexIndex = match.index + match[0].length;
+            }
+            relativeSass += sass.substring(regexIndex, sass.length);
+            // console.log(relativeSass);
+            // sass = sass.replace(/url\(\s*([\'"])(?!(?:https?:)?\/\/)(?!data:)\s*/g, 
+            //         'url($1' + relation + '/');
             // sass = sass.replace(/url\((?!\s*[\'"])\s*/g, 
             //         `url('${relation}/' + `);
 
-            done({ contents: sass });
+            done({ contents: relativeSassnpm });
         });
     }
 

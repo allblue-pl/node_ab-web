@@ -57,9 +57,9 @@ class abWeb_Less extends abWeb.Ext
         let less_source = '';
 
         this.console.log('Variables:');
-        let letiable_paths = fs_paths.variables;
-        for (let letiable_fs_path of fs_paths.variables) {
-            let relative_path = path.relative(this._sourcePath, letiable_fs_path);
+        let variablePaths = fs_paths.variables;
+        for (let variableFSPath of fs_paths.variables) {
+            let relative_path = path.relative(this._sourcePath, variableFSPath);
             relative_path = relative_path.replace(/\\/g, '/');
 
             less_source += '@import "' + relative_path + '";\r\n';
@@ -134,14 +134,14 @@ class abWeb_Less extends abWeb.Ext
         if (!('paths' in config))
             return;
 
-        let letiable_paths = [];
+        let variablePaths = [];
         let styles_paths = [];
         for (let fs_path of config.paths) {
-            letiable_paths.push(path.join(fs_path, 'variables.less'));
+            variablePaths.push(path.join(fs_path, 'variables.less'));
             styles_paths.push(path.join(fs_path, 'styles.less'));
         }
 
-        this.watch('variables', [ 'add', 'unlink', 'change' ], letiable_paths);
+        this.watch('variables', [ 'add', 'unlink', 'change' ], variablePaths);
         this.watch('styles', [ 'add', 'unlink', 'change' ], styles_paths);
     }
     /* / abWeb.Ext Overrides */
