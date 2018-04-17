@@ -149,7 +149,7 @@ class abWeb_Sass extends abWeb.Ext
             // sass = sass.replace(/url\((?!\s*[\'"])\s*/g, 
             //         `url('${relation}/' + `);
 
-            done({ contents: relativeSassnpm });
+            done({ contents: relativeSass });
         });
     }
 
