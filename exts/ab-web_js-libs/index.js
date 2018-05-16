@@ -14,21 +14,35 @@ class abWeb_JSLibs extends abWeb.Ext
     { super(ab_web, ext_path);
         this._header = this.uses('header');
 
-        this._scriptPath = null;
-        this._buildPath = null;
+        this.scriptPath = null;
+        this.buildPath = null;
 
-        this._libPaths = null;
+        this._libPaths = new Map();
 
         this._header.addTagGroup('js-libs', {
             before: [ 'js' ],
         });
     }
 
+    addLib(libName, libPath)
+    {
+        if (!fs.existsSync(libPath)) {
+            this.console.error(`Libs '${libName}' path does not exist: '${libPath}'.`);
+            return;
+        }
+
+        this._libPaths.set(libName, libPath);
+
+        this.watch(libName, [ 'add', 'unlink', 'change' ], path.join(
+                libPath, '**/*.js'));
+    }
+
+
     _createLib_Promise(libName, libPath)
     {
         return new Promise((resolve, reject) => {
             jsLibs.build(libName, libPath, path.join(
-                    this._buildPath, libName), (err, builtFilePaths) => {
+                    this.buildPath, libName), (err, builtFilePaths) => {
                 if (err !== null) {
                     this.console.error(`Error when building \`${libName}\`.`,
                             err.stack);
@@ -62,7 +76,7 @@ class abWeb_JSLibs extends abWeb.Ext
         this._header.clearTags('js-libs');
 
         this._header.addTag('js-libs', 'script', {
-            src: this.uri(this._scriptPath),
+            src: this.uri(this.scriptPath),
             type: 'text/javascript',
         }, '');
 
@@ -108,28 +122,16 @@ class abWeb_JSLibs extends abWeb.Ext
             this.console.error(`'path' in config does not exist: '${config.path}'.`);
             return;
         }
-        this._scriptPath = config.path;
+        this.scriptPath = config.path;
 
-        this._buildPath = config.build.dev;
+        this.buildPath = config.build.dev;
 
         if (!('libs' in config))
             return;
 
         let libs = config.libs;
-        this._libPaths = new Map();
-        for (let libName in config.libs) {
-            let libPath = path.join(config.libs[libName], 'js-lib');
-            if (!fs.existsSync(libPath)) {
-                this.console.error(`Libs '${libName}' path does not exist: '${libPath}'.`);
-                continue;
-            }
-
-
-            this._libPaths.set(libName, libPath);
-
-            this.watch(libName, [ 'add', 'unlink', 'change' ], path.join(
-                    libPath, '**/*.js'));
-        }
+        for (let libName in config.libs)
+            this.addLib(libName, config.libs[libName]);
 
         this.build();
     }

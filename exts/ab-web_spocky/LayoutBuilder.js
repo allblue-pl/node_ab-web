@@ -10,18 +10,16 @@ const
 class LayoutBuilder
 {
 
-    static Build(layoutPath)
+    static Build(ext, layoutPath)
     {
-        let layoutPathArr = path.basename(layoutPath, '.html').split('.');
-        let buildPath = path.join(path.dirname(layoutPath), 
-                path.basename(layoutPath, '.html') + '.js');
-        
-        let packagePath = layoutPathArr[0];
-        let layoutName = layoutPathArr[1];
+        let layoutName = path.basename(layoutPath, '.html');
+        let buildDirPath = path.join(path.dirname(layoutPath), '../js-lib/layouts');
+        let buildPath = path.join(buildDirPath, path.basename(layoutPath, 
+                '.html') + '.js');
         
         let content = fs.readFileSync(layoutPath);
         let xmlDocument = new abXmlParser.Document(content.toString());
-        
+
         let layoutContent = [];
         for (let node of xmlDocument.nodes)
             LayoutBuilder.AddNode(layoutContent, node);
@@ -30,28 +28,28 @@ class LayoutBuilder
         let buildContent =
 `'use strict';
 
-spocky.package('${packagePath}', ($app, $pkg) => {
-    Object.defineProperty($pkg.$layouts, '${layoutName}', {
-        value: class ${layoutName}Layout extends spocky.Layout {
+export default class ${layoutName} extends spocky.Layout {
 
-            constructor()
-            {
-                super(${layoutContentString});
-            }
+    constructor()
+    {
+        super(${layoutContentString});
+    }
 
-        }, enumerable: true,
-    });
-});
+}
 `
         ;
 
+        if (!fs.existsSync(buildDirPath)) {
+            ext.console.log(`Creating layouts dir: '${buildDirPath}'.`)
+            fs.mkdirSync(buildDirPath);
+        }
         fs.writeFileSync(buildPath, buildContent);
     }
 
     static AddNode(parentLayoutNode, node)
     {
         if (node.type === 'text') {
-            let lTextsArr = LayoutBuilder.ParseContent(node.value);
+            let lTextsArr = LayoutBuilder.ParseFields(node.value);
             // console.log(lTextsArr);
             for (let lText of lTextsArr)
                 parentLayoutNode.push(lText);
@@ -60,7 +58,11 @@ spocky.package('${packagePath}', ($app, $pkg) => {
             /* To Do */ 
             return;
         } else if (node.type === 'element') {
-            let lNode = [ node.name, node.attribs ];
+            let attribs = {};
+            for (let attribName in node.attribs)
+                attribs[attribName] = LayoutBuilder.ParseFields(node.attribs[attribName]);
+
+            let lNode = [ node.name, attribs ];
             parentLayoutNode.push(lNode);
 
             for (let childNode of node.children)
@@ -68,7 +70,7 @@ spocky.package('${packagePath}', ($app, $pkg) => {
         }
     }
 
-    static ParseContent(content)
+    static ParseFields(content)
     {
         let lTextsArr = [];
 

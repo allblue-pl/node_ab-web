@@ -16,12 +16,14 @@ class abWeb_Spocky extends abWeb.Ext
     constructor(abWeb, extPath)
     { super(abWeb, extPath);
         this._header = this.uses('header');
+        this._jsLibs = this.uses('js-libs');
 
         this._modulePath = null;
 
         this._layoutPaths = [];
         this._layoutPaths_ToBuild = new js0.List();
-        this._modulePaths = [];
+        this._indexLayoutPaths = [];
+        this._packagePaths = [];
 
         this._header.addTagGroup('spocky', {
             
@@ -29,24 +31,90 @@ class abWeb_Spocky extends abWeb.Ext
     }
 
 
+    _buildIndex()
+    {
+        let changed = false;
+        
+        if (this._layoutPaths.length !== this._indexLayoutPaths.length)
+            changed = true;
+        
+        if (!changed) {
+            for (let layoutPath of this._layoutPaths) {
+                if (!this._indexLayoutPaths.includes(layoutPath)) {
+                    changed = true;
+                    break;
+                }
+            }
+        }
+
+        if (!changed) {
+            for (let indexLayoutPath of this._indexLayoutPaths) {
+                if (!this._layoutPaths.includes(indexLayoutPath)) {
+                    changed = true
+                    break;
+                }
+            }
+        }
+
+        if (!changed)
+            return;
+
+        this._indexLayoutPaths = this._layoutPaths.slice(0);
+
+        let indexPaths = {};
+        for (let layoutPath of this._indexLayoutPaths) {
+            let layoutDirPath = path.join(path.dirname(layoutPath), 
+                    '../js-lib/layouts');
+            
+            if (!(layoutDirPath in indexPaths))
+                indexPaths[layoutDirPath] = [];
+            indexPaths[layoutDirPath].push(layoutPath);
+        }
+        this._indexLayoutPaths = this._layoutPaths.slice(0);
+
+        for (let indexDirPath in indexPaths) {
+            let content = 
+`'use strict';
+
+
+`
+            
+            for (let layoutPath of indexPaths[indexDirPath]) {
+                let layoutName = path.basename(layoutPath, '.html');
+            
+                content +=
+`export const ${layoutName} = require('./${layoutName}');
+`
+                ;
+            }
+    
+            fs.writeFileSync(path.join(indexDirPath, 'index.js'), content);
+
+            let indexRelPath = path.relative(this.buildInfo.index, 
+                    path.join(indexDirPath, 'index.js')).replace('/\\/g', '/');
+            this.console.log(`Created: ${indexRelPath}`);
+        }
+
+    }
+
+
     /* abWeb.Ext Overrides */
     __build(taskName)
     {
         this.console.info('Building...');   
-
         let layoutPaths = [];
         for (let [ i, layoutPath ] of this._layoutPaths_ToBuild) {
             if (!layoutPaths.includes(layoutPath))
                 layoutPaths.push(layoutPath);
         }
 
-        let buildLayoutPromises = [];    
+        let buildPromises = [];    
         for (let layoutPath of layoutPaths) {
             this._layoutPaths_ToBuild.remove(layoutPath);
 
-            buildLayoutPromises.push((async () => {
+            buildPromises.push((async () => {
                 try {
-                    LayoutBuilder.Build(layoutPath);
+                    LayoutBuilder.Build(this, layoutPath);
                 } catch (err) {
                     this.console.error(`Cannot parse '${layoutPath}':`);
                     this.console.warn(err);
@@ -59,7 +127,11 @@ class abWeb_Spocky extends abWeb.Ext
             })());
         }
 
-        return Promise.all(buildLayoutPromises)
+        buildPromises.push((async () => {
+            this._buildIndex();
+        })());
+
+        return Promise.all(buildPromises)
             .then(() => {
                 this._header.clearTags('spocky');
 
@@ -68,22 +140,15 @@ class abWeb_Spocky extends abWeb.Ext
                     type: 'text/javascript',
                 }, '');
 
-                for (let layoutPath of this._layoutPaths) {
-                    let builtLayoutPath = path.join(path.dirname(layoutPath), 
-                            path.basename(layoutPath, '.html') + '.js');
+                // for (let layoutPath of this._layoutPaths) {
+                //     let builtLayoutPath = path.join(path.dirname(layoutPath), 
+                //             path.basename(layoutPath, '.html') + '.js');
 
-                    this._header.addTag('spocky', 'script', {
-                        src: this.uri(builtLayoutPath),
-                        type: 'text/javascript',
-                    }, '');
-                }
-
-                for (let modulePath of this._modulePaths) {
-                    this._header.addTag('spocky', 'script', {
-                        src: this.uri(modulePath),
-                        type: 'text/javascript',
-                    }, '');
-                }
+                //     this._header.addTag('spocky', 'script', {
+                //         src: this.uri(builtLayoutPath),
+                //         type: 'text/javascript',
+                //     }, '');
+                // }
             })
             .then(() => {
                 this.console.success('Finished.');
@@ -96,7 +161,13 @@ class abWeb_Spocky extends abWeb.Ext
         if ('layouts' in changes)
             this._layoutPaths_ToBuild.addAll(changes.layouts);
 
-        this._modulePaths = fsPaths.modules;
+        if ('packages' in changes) {
+            for (let packagePath of changes.packages) {
+                this._jsLibs.addLib(path.basename(packagePath), 
+                        path.join(packagePath, 'js-lib'));
+            }
+        }
+        
         // if ('layouts' in changes) {
         //     for (let i = 0; i < )
         // }
@@ -117,14 +188,14 @@ class abWeb_Spocky extends abWeb.Ext
         this._modulePath = config.path;
 
         let layoutPaths = [];
-        let modulePaths = [];
+        let packagePaths = [];
         for (let fsPath of config.packages) {
             layoutPaths.push(path.join(fsPath, 'layouts/*.html'));
-            modulePaths.push(path.join(fsPath, '*.js'));
+            packagePaths.push(fsPath);
         }
 
         this.watch('layouts', [ 'add', 'unlink', 'change' ], layoutPaths);
-        this.watch('modules', [ 'add', 'unlink', 'change' ], modulePaths);
+        this.watch('packages', [ 'add' ], packagePaths);
     }
     /* / abWeb.Ext Overrides */
 
