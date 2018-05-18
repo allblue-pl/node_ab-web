@@ -12,15 +12,15 @@ class abWeb_JSLibs extends abWeb.Ext
 
     constructor(ab_web, ext_path)
     { super(ab_web, ext_path);
-        this._header = this.uses('header');
+        this._js = this.uses('js');
 
         this.scriptPath = null;
         this.buildPath = null;
 
         this._libPaths = new Map();
 
-        this._header.addTagGroup('js-libs', {
-            before: [ 'js' ],
+        this._js.addScriptsGroup('js-libs', {
+            before: [ 'js.js' ],
         });
     }
 
@@ -32,9 +32,10 @@ class abWeb_JSLibs extends abWeb.Ext
         }
 
         this._libPaths.set(libName, libPath);
+        this._js.addScriptsGroup(`js-libs.${libName}`);
 
-        this.watch(libName, [ 'add', 'unlink', 'change' ], path.join(
-                libPath, '**/*.js'));
+        // this.watch(libName, [ 'add', 'unlink', 'change' ], path.join(
+        //         libPath, '**/*.js'));
     }
 
 
@@ -54,11 +55,8 @@ class abWeb_JSLibs extends abWeb.Ext
                 let buildUris = builtFilePaths.map((filePath) =>
                         this.uri(filePath, true));
 
-                for (let buildUri of buildUris) {
-                    this._header.addTag('js-libs', 'script', {
-                        src: buildUri,
-                        type: 'text/javascript',
-                    }, '');
+                for (let builtFilePath of builtFilePaths) {
+                    this._js.addScript(`js-libs.${libName}`, builtFilePath);
                 }
 
                 this.console.success(`\`${libName}\` built.`);
@@ -73,12 +71,8 @@ class abWeb_JSLibs extends abWeb.Ext
     {
         this.console.info('Building.');
 
-        this._header.clearTags('js-libs');
-
-        this._header.addTag('js-libs', 'script', {
-            src: this.uri(this.scriptPath),
-            type: 'text/javascript',
-        }, '');
+        this._js
+        
 
         let libPromises = [];
         for (let [ libName, libPath ] of this._libPaths)
@@ -91,7 +85,7 @@ class abWeb_JSLibs extends abWeb.Ext
                     this.console.log(` - ${libName}`);
                 }
 
-                this._header.build();
+                this._js.build();
             });
         // return new Promise((resolve, reject) => {
         //     Promise.all(libPromises)
@@ -132,6 +126,9 @@ class abWeb_JSLibs extends abWeb.Ext
         let libs = config.libs;
         for (let libName in config.libs)
             this.addLib(libName, config.libs[libName]);
+
+        this._js.clearScriptsGroup('js-libs');
+        this._js.addScript('js-libs', this.scriptPath);
 
         this.build();
     }

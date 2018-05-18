@@ -37,6 +37,8 @@ class abWeb_Header extends abWeb.Ext
 
     addTagGroup(groupId, props = {})
     {
+        console.log('HM', groupId, props);
+
         if (this._tagsGroups.has(groupId))
             this.console.warn(`Tag group '${groupId}' already exists.`);
         else

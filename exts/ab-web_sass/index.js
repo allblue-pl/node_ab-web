@@ -199,6 +199,7 @@ class abWeb_Sass extends abWeb.Ext
                 importer: (url, prev, done) => {                    
                     return this._parseSource(url, prev, done);
                 },
+                outputStyle: this.buildInfo.type('rel') ? 'compressed' : 'nested',
             }, (err, result) => {
                 if (err) {
                     this.console.error('Error compiling sass.');
