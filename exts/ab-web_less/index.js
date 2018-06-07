@@ -52,33 +52,33 @@ class abWeb_Less extends abWeb.Ext
         fs.writeFileSync(css_path, css_source);
     }
 
-    _getSource(fs_paths)
+    _getSource(fsPaths)
     {
-        let less_source = '';
+        let lessSource = '';
 
         this.console.log('Variables:');
-        let variablePaths = fs_paths.variables;
-        for (let variableFSPath of fs_paths.variables) {
-            let relative_path = path.relative(this._sourcePath, variableFSPath);
-            relative_path = relative_path.replace(/\\/g, '/');
+        let variablePaths = fsPaths.variables;
+        for (let variableFSPath of fsPaths.variables) {
+            let relativePath = path.relative(this._sourcePath, variableFSPath);
+            relativePath = relativePath.replace(/\\/g, '/');
 
-            less_source += '@import "' + relative_path + '";\r\n';
+            lessSource += '@import "' + relativePath + '";\r\n';
 
-            this.console.log('    - ' + relative_path);
+            this.console.log('    - ' + relativePath);
         }
-        less_source += '\r\n';
+        lessSource += '\r\n';
 
         this.console.log('Styles:');
-        for (let styles_fs_path of fs_paths.styles) {
-            let relative_path = path.relative(this._sourcePath, styles_fs_path);
-            relative_path = relative_path.replace(/\\/g, '/');
+        for (let styles_fsPath of fsPaths.styles) {
+            let relativePath = path.relative(this._sourcePath, styles_fsPath);
+            relativePath = relativePath.replace(/\\/g, '/');
 
-            less_source += '@import "' + relative_path + '";\r\n';
+            lessSource += '@import "' + relativePath + '";\r\n';
 
-            this.console.log('    - ' + relative_path);
+            this.console.log('    - ' + relativePath);
         }
 
-        return less_source;
+        return lessSource;
     }
 
 
@@ -123,9 +123,9 @@ class abWeb_Less extends abWeb.Ext
         });
     }
 
-    __onChange(fs_paths, watcher_name, event_type)
+    __onChange(fsPaths, changes)
     {
-        this._source = this._getSource(fs_paths);
+        this._source = this._getSource(fsPaths);
         this.build();
     }
 
@@ -135,14 +135,14 @@ class abWeb_Less extends abWeb.Ext
             return;
 
         let variablePaths = [];
-        let styles_paths = [];
-        for (let fs_path of config.paths) {
-            variablePaths.push(path.join(fs_path, 'variables.less'));
-            styles_paths.push(path.join(fs_path, 'styles.less'));
+        let stylesPaths = [];
+        for (let fsPath of config.paths) {
+            variablePaths.push(path.join(fsPath, 'variables.less'));
+            stylesPaths.push(path.join(fsPath, 'styles.less'));
         }
 
         this.watch('variables', [ 'add', 'unlink', 'change' ], variablePaths);
-        this.watch('styles', [ 'add', 'unlink', 'change' ], styles_paths);
+        this.watch('styles', [ 'add', 'unlink', 'change' ], stylesPaths);
     }
     /* / abWeb.Ext Overrides */
 

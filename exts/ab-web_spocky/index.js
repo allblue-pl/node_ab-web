@@ -25,7 +25,7 @@ class abWeb_Spocky extends abWeb.Ext
         this._indexLayoutPaths = [];
         this._packagePaths = [];
 
-        this._header.addTagGroup('spocky', {
+        this._header.addTagsGroup('spocky', {
             
         });
     }
@@ -64,7 +64,7 @@ class abWeb_Spocky extends abWeb.Ext
         let indexPaths = {};
         for (let layoutPath of this._indexLayoutPaths) {
             let layoutDirPath = path.join(path.dirname(layoutPath), 
-                    '../js-lib/layouts');
+                    '../js-lib/$layouts');
             
             if (!(layoutDirPath in indexPaths))
                 indexPaths[layoutDirPath] = [];
@@ -75,7 +75,6 @@ class abWeb_Spocky extends abWeb.Ext
         for (let indexDirPath in indexPaths) {
             let content = 
 `'use strict';
-
 
 `
             
@@ -133,12 +132,12 @@ class abWeb_Spocky extends abWeb.Ext
 
         return Promise.all(buildPromises)
             .then(() => {
-                this._header.clearTags('spocky');
+                this._header.clearTagsGroup('spocky');
 
-                this._header.addTag('spocky', 'script', {
-                    src: this.uri(path.join(this._modulePath, 'js/spocky.js')),
-                    type: 'text/javascript',
-                }, '');
+                // this._header.addTag('spocky', 'script', {
+                //     src: this.uri(path.join(this._modulePath, 'js/spocky.js')),
+                //     type: 'text/javascript',
+                // }, '');
 
                 // for (let layoutPath of this._layoutPaths) {
                 //     let builtLayoutPath = path.join(path.dirname(layoutPath), 
@@ -158,13 +157,15 @@ class abWeb_Spocky extends abWeb.Ext
     __onChange(fsPaths, changes)
     {
         this._layoutPaths = fsPaths.layouts;
-        if ('layouts' in changes)
-            this._layoutPaths_ToBuild.addAll(changes.layouts);
+        if ('layouts' in changes) {
+            for (let change of changes.layouts)
+                this._layoutPaths_ToBuild.add(change.fsPath);
+        }
 
         if ('packages' in changes) {
-            for (let packagePath of changes.packages) {
-                this._jsLibs.addLib(path.basename(packagePath), 
-                        path.join(packagePath, 'js-lib'));
+            for (let change of changes.packages) {
+                this._jsLibs.addLib(path.basename(change.fsPath), 
+                        path.join(change.fsPath, 'js-lib'));
             }
         }
         

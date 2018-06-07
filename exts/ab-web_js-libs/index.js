@@ -18,6 +18,7 @@ class abWeb_JSLibs extends abWeb.Ext
         this.buildPath = null;
 
         this._libPaths = new Map();
+        this._scriptsToBuild = [];
 
         this._js.addScriptsGroup('js-libs', {
             before: [ 'js.js' ],
@@ -32,10 +33,12 @@ class abWeb_JSLibs extends abWeb.Ext
         }
 
         this._libPaths.set(libName, libPath);
-        this._js.addScriptsGroup(`js-libs.${libName}`);
+        this._js.addScriptsGroup(`js-libs.${libName}`, {
+            after: [ 'js.js-libs' ],
+        });
 
-        // this.watch(libName, [ 'add', 'unlink', 'change' ], path.join(
-        //         libPath, '**/*.js'));
+        this.watch(libName, [ 'add', 'unlink', 'change' ], 
+                path.join(libPath, '**/*.js'));
     }
 
 
@@ -65,27 +68,55 @@ class abWeb_JSLibs extends abWeb.Ext
         });
     }
 
+    _createScript_Promise(scriptInfo)
+    {
+        let libPath = this._libPaths.get(scriptInfo.libName);
+
+        return new Promise((resolve, reject) => {
+            jsLibs.buildScript(scriptInfo.libName, libPath, path.join(
+                    this.buildPath, scriptInfo.libName), scriptInfo.scriptPath, 
+                    (err, builtFSPath) => {
+                if (err !== null) {
+                    this.console.error(`Error when building '${scriptInfo.libName}:` +
+                            `${scriptInfo.scriptPath}'.`,
+                            err.stack);
+
+                    reject(err);
+                    return;
+                }
+
+                if (scriptInfo.eventType !== 'change')
+                    this._js.addScript(`js-libs.${scriptInfo.libName}`, builtFSPath);
+
+                let relScriptPath = path.relative(this.buildInfo.index, scriptInfo.scriptPath)
+                        .replace(/\\/g, '/');
+
+                this.console.log(`Built: '${scriptInfo.libName}:${relScriptPath}'.`);
+                resolve();
+            });
+        });
+    }
+
 
     /* abWeb.Ext Overrides */
     __build()
     {
         this.console.info('Building.');
 
-        this._js
-        
+        let buildPromises = [];
+        let buildJS = false;
+        for (let scriptInfo of this._scriptsToBuild) {
+            if (scriptInfo.eventType !== 'change')
+                buildJS = true;
 
-        let libPromises = [];
-        for (let [ libName, libPath ] of this._libPaths)
-            libPromises.push(this._createLib_Promise(libName, libPath));
+            buildPromises.push(this._createScript_Promise(scriptInfo));
+        }
+        this._scriptsToBuild = [];
 
-        return Promise.all(libPromises)
+        return Promise.all(buildPromises)
             .then(() => {
-                this.console.log('Libs:');
-                for (let [ libName, libPath ] of this._libPaths) {
-                    this.console.log(` - ${libName}`);
-                }
-
-                this._js.build();
+                if (!this.buildInfo.type('rel') && buildJS)
+                    this._js.build();
             });
         // return new Promise((resolve, reject) => {
         //     Promise.all(libPromises)
@@ -108,6 +139,31 @@ class abWeb_JSLibs extends abWeb.Ext
         //             reject(err);
         //         });
         // });
+    }
+
+    __onChange(fsPaths, changes)
+    {
+        for (let libName in changes) {
+            for (let change of changes[libName]) {
+                let scriptToBuildFound = false;
+                for (let scriptInfo of this._scriptsToBuild) {
+                    if (change.fsPath === scriptInfo.scriptPath) {
+                        scriptToBuildFound = true;
+                        break;
+                    }
+                }
+
+                if (!scriptToBuildFound) {
+                    this._scriptsToBuild.push({
+                        libName: libName,
+                        scriptPath: change.fsPath,
+                        eventType: change.eventType,
+                    });
+                }
+            }
+        }
+
+        this.build();
     }
 
     __parse(config)

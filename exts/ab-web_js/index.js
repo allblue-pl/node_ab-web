@@ -30,14 +30,6 @@ class abWeb_JS extends abWeb.Ext
         this._scriptPath_Min = path.join(this.buildInfo.front, 'js', 'script.min.js');
     }
 
-    addScriptsGroup(groupId, props = {})
-    {
-        groupId = `js.${groupId}`;
-
-        this._header.addTagGroup(groupId, props);
-        this._scriptsGroups.add(groupId, props);
-    }
-
     addScript(groupId, scriptPath)
     {
         groupId = `js.${groupId}`;
@@ -47,6 +39,14 @@ class abWeb_JS extends abWeb.Ext
 
         this._scriptsGroups.addValue(groupId, scriptPath);
         this.build();
+    }
+
+    addScriptsGroup(groupId, props = {})
+    {
+        groupId = `js.${groupId}`;
+
+        this._header.addTagsGroup(groupId, props);
+        this._scriptsGroups.add(groupId, props);
     }
 
     clearScriptsGroup(groupId)
@@ -77,7 +77,7 @@ class abWeb_JS extends abWeb.Ext
         this.console.info('Building...');
 
         for (let groupId of this._scriptsGroups.getGroupIds())
-            this._header.clearTags(groupId);
+            this._header.clearTagsGroup(groupId);
 
         if (this.buildInfo.type('rel')) {
             let js = '';
@@ -138,7 +138,7 @@ class abWeb_JS extends abWeb.Ext
         return null;
     }
 
-    __onChange(fsPaths, eventTypes)
+    __onChange(fsPaths, changes)
     {
         if (this.buildInfo.type('dev')) {
             let currentFSPaths = this._scriptsGroups.getGroup('js.js');

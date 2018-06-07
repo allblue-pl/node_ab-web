@@ -18,79 +18,42 @@ class abWeb_Header extends abWeb.Ext
 
     constructor(ab_web, ext_path)
     { super(ab_web, ext_path);
-        Object.defineProperties(this, {
-            _filePath: { value: path.join(this.buildInfo.back, 'header.html'), },
-
-            _tagsGroups: { value: new js0.List(), },
-        });
+        this._filePath = path.join(this.buildInfo.back, 'header.html');
+        this._tagsGroups = new abWeb.Groups();
     }
 
     addTag(groupId, ...args)
     {
         if (!this._tagsGroups.has(groupId))
-            this.addTagGroup(groupId);
+            this.addTagsGroup(groupId);
 
-        let tagsGroup = this._tagsGroups.get(groupId);
-        tagsGroup.tags.push(new (Function.prototype.bind.apply(Tag,
-                [ null ].concat(args)))());
+        let tag = new (Function.prototype.bind.apply(Tag, [ null ].concat(args)))();
+
+        this._tagsGroups.addValue(groupId, tag);
+        this.build();
     }
 
-    addTagGroup(groupId, props = {})
+    addTagsGroup(groupId, props = {})
     {
-        console.log('HM', groupId, props);
-
-        if (this._tagsGroups.has(groupId))
-            this.console.warn(`Tag group '${groupId}' already exists.`);
-        else
-            this._tagsGroups.set(groupId, { tags: [], before: [], after: [] });
-
-        if ('before' in props) {
-            this._tagsGroups.get(groupId).before = this._tagsGroups.get(groupId)
-                    .before.concat(props.before);
-        }
-
-        if ('after' in props) {
-            this._tagsGroups.get(groupId).after = this._tagsGroups.get(groupId)
-                    .after.concat(props.after);
-        }
-
-        // if (!('before' in props)) {
-        //     this._tagsGroups.set(groupId, []);
-        //     return;
-        // }
-
-        // let newTags = new Map();
-        // for (let [ t_groupId, groupTags ] of this._tags) {
-        //     if (props.before.includes(t_groupId))
-        //         newTags.set(groupId, []);
-        //     newTags.set(groupId, groupTags);
-        // }
+        this._tagsGroups.add(groupId, props);
     }
 
-    clearTags(groupId)
+    clearTagsGroup(groupId)
     {
-        if (this._tagsGroups.has(groupId))
-            this._tagsGroups.get(groupId).tags = [];
+        this._tagsGroups.clear(groupId);
+        this.build();
     }
 
     getHtml()
     {
         /* Sort */
-        let tagsGroups = new js0.List(this._tagsGroups);
-        tagsGroups.sort((a, b) => {
-            if (a.value.before.includes(b.key) || b.value.after.includes(a.key))
-                return -1;
-            if (b.value.before.includes(a.key) || a.value.after.includes(b.key))
-                return 1;
-
-            return 0;
-        });
+        let tagsGroups = this._tagsGroups.getValues();
 
         /* Html */
         var html = '';
         for (let [ tagsGroupId, tagsGroup ] of tagsGroups) {            
             html += `<!-- ${tagsGroupId} -->\r\n`;
-            for (let tag of tagsGroup.tags)
+            for (let tag of tagsGroup)
                 html += tag.html + '\r\n';
         }
 

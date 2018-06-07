@@ -13,7 +13,7 @@ class LayoutBuilder
     static Build(ext, layoutPath)
     {
         let layoutName = path.basename(layoutPath, '.html');
-        let buildDirPath = path.join(path.dirname(layoutPath), '../js-lib/layouts');
+        let buildDirPath = path.join(path.dirname(layoutPath), '../js-lib/$layouts');
         let buildPath = path.join(buildDirPath, path.basename(layoutPath, 
                 '.html') + '.js');
         
@@ -28,11 +28,20 @@ class LayoutBuilder
         let buildContent =
 `'use strict';
 
+const
+    spocky = require('spocky')
+;
+
 export default class ${layoutName} extends spocky.Layout {
+
+    static get Content() {
+        return ${layoutContentString};
+    }
+
 
     constructor()
     {
-        super(${layoutContentString});
+        super(${layoutName}.Content);
     }
 
 }
@@ -74,7 +83,7 @@ export default class ${layoutName} extends spocky.Layout {
     {
         let lTextsArr = [];
 
-        let r = /\$[a-zA-Z0-9._]+/g;
+        let r = /\${?([a-zA-Z0-9._]+)}?(\(.*\))?/g;
         let offset = 0;
         while(true) {
             let match = r.exec(content);
@@ -85,7 +94,8 @@ export default class ${layoutName} extends spocky.Layout {
             if (text !== '')
                 lTextsArr.push(text);
 
-            lTextsArr.push(match[0]);
+            let args = typeof match[2] === 'undefined' ? '' : match[2];
+            lTextsArr.push(`$${match[1]}${args}`);
             offset = match.index + match[0].length;
         }
 

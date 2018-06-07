@@ -246,7 +246,7 @@ class abWeb_Sass extends abWeb.Ext
         });
     }
 
-    __onChange(fsPaths, watcherName, eventType)
+    __onChange(fsPaths, changes)
     {        
         this._source = this._getSource(fsPaths);
         this.build();
