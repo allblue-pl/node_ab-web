@@ -264,12 +264,12 @@ class abWeb_Sass extends abWeb.Ext
             if (path.extname(fsPath) === '.scss' || path.extname(fsPath) === '.css') {
                 this._stylesPaths.push(fsPath);
 
-                watchPaths = path.join(path.dirname(fsPath), '*.*css');
+                watchPaths.push(path.join(path.dirname(fsPath), '*.*css'));
             } else if (path.extname(fsPath) === '') {
                 this._variablesPaths.push(path.join(fsPath, 'variables.scss'));
                 this._stylesPaths.push(path.join(fsPath, 'styles.scss'));
 
-                watchPaths = path.join(fsPath, '*.*css');
+                watchPaths.push(path.join(fsPath, '*.*css'));
             } else
                 this.console.error('Unknown extension type: ', fsPath);
         }
