@@ -166,13 +166,15 @@ class abWeb_JSLibs extends abWeb.Ext
         this.build();
     }
 
-    __parse(config)
+    __parse(config, configPath)
     {
-        if (!fs.existsSync(config.path)) {
+        let scriptPath = path.join(path.dirname(configPath), config.path);
+
+        if (!fs.existsSync(scriptPath)) {
             this.console.error(`'path' in config does not exist: '${config.path}'.`);
             return;
         }
-        this.scriptPath = config.path;
+        this.scriptPath = scriptPath;
 
         this.buildPath = config.build.dev;
 
