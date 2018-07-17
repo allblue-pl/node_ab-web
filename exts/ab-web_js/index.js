@@ -7,7 +7,6 @@ const abFS = require('ab-fs');
 const abWeb = require('../../.');
 const babel = require('babel-core');
 const chalk = require('chalk');
-const uglifyJS = require('babel-core');
 
 // const abFS = require('ab-fs');
 
@@ -28,6 +27,7 @@ class abWeb_JS extends abWeb.Ext
 
         this._scriptPath = path.join(this.buildInfo.front, 'js', 'script.js');
         this._scriptPath_Min = path.join(this.buildInfo.front, 'js', 'script.min.js');
+        this._scriptPath_Map = path.join(this.buildInfo.front, 'js', 'script.min.js.map');
     }
 
     addScript(groupId, scriptPath)
@@ -85,7 +85,8 @@ class abWeb_JS extends abWeb.Ext
             for (let [ groupId, scriptPaths ] of scriptGroups) {
                 this.console.info('    - ' + groupId);
                 for (let fsPath of scriptPaths) {
-                    js += fs.readFileSync(fsPath);
+                    js += `\r\n// File: ${fsPath}\r\n`;
+                    js += fs.readFileSync(fsPath) + '\r\n';
                     
                     let relPath = path.relative(this.buildInfo.index, fsPath)
                             .replace(/\\/g, '/');
@@ -93,11 +94,23 @@ class abWeb_JS extends abWeb.Ext
                 }
             }
 
+            let polyfill_MinJS = fs.readFileSync(path.join(
+                    path.dirname(require.resolve('babel-polyfill')), 
+                    '../dist/polyfill.min.js'));
+            js = '\r\n// File: babel-pollyfill\r\n' + polyfill_MinJS + '\r\n' + js;
+
+            // fs.writeFileSync(this._scriptPath, js);
+
             try {
                 let script = babel.transform(js, {
+                    presets: [ require.resolve('babel-preset-es2015-script') ],
+                    // inputSourceMap: this._scriptPath,
+                    // sourceMaps: true,
                     minified: true,
                 });
-                fs.writeFileSync(this._scriptPath_Min, script.code);
+                // fs.writeFileSync(this._scriptPath_Min, script.code + 
+                //         '\r\n\r\n//# sourceMappingURL=script.min.js.map');
+                // fs.writeFileSync(this._scriptPath_Map, JSON.stringify(script.map));
 
                 this._header.addTag('js.js', 'script', {
                     src: this.uri(this._scriptPath_Min + '?v=' + this.buildInfo.hash),
@@ -106,7 +119,12 @@ class abWeb_JS extends abWeb.Ext
 
                 this.console.success('Finished.');
             } catch (err) {
-                this.console.error(err);
+                this._header.addTag('js.js', 'script', {
+                    src: this.uri(this._scriptPath_Min + '?v=' + this.buildInfo.hash),
+                    type: 'text/javascript',
+                }, '');
+
+                this.console.error(err.stack);
             }
         } else {
             this.console.log('Scripts:');

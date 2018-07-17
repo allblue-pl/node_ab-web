@@ -44,6 +44,9 @@ class abWeb_Dist extends abWeb.Ext
 
     __parse(config)
     {
+        if (!this.buildInfo.type('rel'))
+            return;
+
         if (!'paths' in config)
             return;
 
