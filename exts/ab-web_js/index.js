@@ -108,8 +108,8 @@ class abWeb_JS extends abWeb.Ext
                     // sourceMaps: true,
                     minified: true,
                 });
-                // fs.writeFileSync(this._scriptPath_Min, script.code + 
-                //         '\r\n\r\n//# sourceMappingURL=script.min.js.map');
+                fs.writeFileSync(this._scriptPath_Min, script.code + 
+                        '\r\n\r\n//# sourceMappingURL=script.min.js.map');
                 // fs.writeFileSync(this._scriptPath_Map, JSON.stringify(script.map));
 
                 this._header.addTag('js.js', 'script', {
