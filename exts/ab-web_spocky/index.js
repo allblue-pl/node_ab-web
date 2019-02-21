@@ -21,6 +21,7 @@ class abWeb_Spocky extends abWeb.Ext
         this._modulePath = null;
 
         this._layoutPaths = [];
+        this._layoutPaths_Watched = [];
         this._layoutPaths_ToBuild = new js0.List();
         this._indexLayoutPaths = [];
         this._packagePaths = [];
@@ -164,6 +165,12 @@ class abWeb_Spocky extends abWeb.Ext
 
         if ('packages' in changes) {
             for (let change of changes.packages) {
+                let layoutPath = path.join(change.fsPath, 'layouts/*.html');
+                if (!this._layoutPaths_Watched.includes(layoutPath)) {
+                    this._layoutPaths_Watched.push(layoutPath);
+                    this.watch('layouts', [ 'add', 'unlink', 'change' ], this._layoutPaths_Watched);
+                }
+
                 this._jsLibs.addLib(path.basename(change.fsPath), 
                         path.join(change.fsPath, 'js-lib'));
             }
@@ -187,15 +194,15 @@ class abWeb_Spocky extends abWeb.Ext
         }
 
         this._modulePath = config.path;
+        this._layoutPaths_Watched = [];
 
-        let layoutPaths = [];
         let packagePaths = [];
         for (let fsPath of config.packages) {
-            layoutPaths.push(path.join(fsPath, 'layouts/*.html'));
+            // layoutPaths.push(path.join(fsPath, 'layouts/*.html'));
             packagePaths.push(fsPath);
         }
 
-        this.watch('layouts', [ 'add', 'unlink', 'change' ], layoutPaths);
+        this.watch('layouts', [ 'add', 'unlink', 'change' ], this._layoutPaths_Watched);
         this.watch('packages', [ 'add' ], packagePaths);
     }
     /* / abWeb.Ext Overrides */
