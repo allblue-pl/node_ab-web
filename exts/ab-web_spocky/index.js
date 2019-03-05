@@ -21,10 +21,12 @@ class abWeb_Spocky extends abWeb.Ext
         this._modulePath = null;
 
         this._layoutPaths = [];
+        this._layoutOverrides = {};
         this._layoutPaths_Watched = [];
         this._layoutPaths_ToBuild = new js0.List();
         this._indexLayoutPaths = [];
         this._packagePaths = [];
+        this._packages = {};
 
         this._header.addTagsGroup('spocky', {
             
@@ -64,8 +66,9 @@ class abWeb_Spocky extends abWeb.Ext
 
         let indexPaths = {};
         for (let layoutPath of this._indexLayoutPaths) {
-            let layoutDirPath = path.join(path.dirname(layoutPath), 
-                    '../js-lib/$layouts');
+            let packageName = path.basename(path.join(layoutPath, '../..'));   
+            let packagePath = path.resolve(this._packages[packageName].fsPath);
+            let layoutDirPath = path.join(packagePath, 'js-lib/$layouts');
             
             if (!(layoutDirPath in indexPaths))
                 indexPaths[layoutDirPath] = [];
@@ -114,7 +117,10 @@ class abWeb_Spocky extends abWeb.Ext
 
             buildPromises.push((async () => {
                 try {
-                    LayoutBuilder.Build(this, layoutPath);
+                    let packageName = path.basename(path.join(layoutPath, '../..'));
+                    let packagePath = this._packages[packageName].fsPath;
+
+                    LayoutBuilder.Build(this, layoutPath, packagePath);
                 } catch (err) {
                     this.console.error(`Cannot parse '${layoutPath}':`);
                     this.console.warn(err);
@@ -165,14 +171,20 @@ class abWeb_Spocky extends abWeb.Ext
 
         if ('packages' in changes) {
             for (let change of changes.packages) {
-                let layoutPath = path.join(change.fsPath, 'layouts/*.html');
+                let packageName = path.basename(change.fsPath);                
+                let layoutPath = packageName in this._layoutOverrides ?
+                        path.resolve(path.join(this._layoutOverrides[packageName], 'layouts/*.html')) :
+                        path.join(change.fsPath, 'layouts/*.html');
+
                 if (!this._layoutPaths_Watched.includes(layoutPath)) {
                     this._layoutPaths_Watched.push(layoutPath);
                     this.watch('layouts', [ 'add', 'unlink', 'change' ], this._layoutPaths_Watched);
                 }
 
-                this._jsLibs.addLib(path.basename(change.fsPath), 
-                        path.join(change.fsPath, 'js-lib'));
+                this._packages[packageName] = {
+                    fsPath: change.fsPath
+                };
+                this._jsLibs.addLib(packageName, path.join(change.fsPath, 'js-lib'));
             }
         }
         
@@ -193,8 +205,12 @@ class abWeb_Spocky extends abWeb.Ext
             return;
         }
 
+        if ('layoutOverrides' in config)
+            this._layoutOverrides = config.layoutOverrides;
+
         this._modulePath = config.path;
         this._layoutPaths_Watched = [];
+        this._packages = {};
 
         let packagePaths = [];
         for (let fsPath of config.packages) {

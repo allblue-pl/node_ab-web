@@ -10,10 +10,10 @@ const
 class LayoutBuilder
 {
 
-    static Build(ext, layoutPath)
+    static Build(ext, layoutPath, packagePath)
     {
         let layoutName = path.basename(layoutPath, '.html');
-        let buildDirPath = path.join(path.dirname(layoutPath), '../js-lib/$layouts');
+        let buildDirPath = path.join(packagePath, 'js-lib/$layouts');
         let buildPath = path.join(buildDirPath, path.basename(layoutPath, 
                 '.html') + '.js');
         
