@@ -47,7 +47,7 @@ class abWeb_Dist extends abWeb.Ext
         if (!this.buildInfo.type('rel'))
             return;
 
-        if (!'paths' in config)
+        if (!('paths' in config))
             return;
 
         this.watch('files', [ 'add', 'unlink', 'change' ], config.paths);

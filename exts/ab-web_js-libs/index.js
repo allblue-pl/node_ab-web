@@ -168,6 +168,11 @@ class abWeb_JSLibs extends abWeb.Ext
 
     __parse(config, configPath)
     {
+        if (!('path' in config)) {
+            this.console.warn(`'path' not set in config.`);
+            return;
+        }
+
         let scriptPath = path.join(path.dirname(configPath), config.path);
 
         if (!fs.existsSync(scriptPath)) {

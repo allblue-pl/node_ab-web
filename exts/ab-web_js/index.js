@@ -5,7 +5,7 @@ const path = require('path');
 
 const abFS = require('ab-fs');
 const abWeb = require('../../.');
-const babel = require('babel-core');
+const babel = require('@babel/core');
 const chalk = require('chalk');
 
 // const abFS = require('ab-fs');
@@ -94,22 +94,22 @@ class abWeb_JS extends abWeb.Ext
                 }
             }
 
-            let polyfill_MinJS = fs.readFileSync(path.join(
-                    path.dirname(require.resolve('babel-polyfill')), 
-                    '../dist/polyfill.min.js'));
-            js = '\r\n// File: babel-pollyfill\r\n' + polyfill_MinJS + '\r\n' + js;
+            // let polyfill_MinJS = fs.readFileSync(path.join(
+            //         path.dirname(require.resolve('@babel/polyfill')), 
+            //         '../dist/polyfill.min.js'));
+            // js = '\r\n// File: babel-pollyfill\r\n' + polyfill_MinJS + '\r\n' + js;
 
             // fs.writeFileSync(this._scriptPath, js);
 
             try {
                 let script = babel.transform(js, {
-                    presets: [ require.resolve('babel-preset-es2015-script') ],
+                    presets: [ require('@babel/preset-env') ], // [ require.resolve('babel-preset-es2015-script') ],
                     // inputSourceMap: this._scriptPath,
                     // sourceMaps: true,
                     minified: true,
                 });
-                fs.writeFileSync(this._scriptPath_Min, script.code + 
-                        '\r\n\r\n//# sourceMappingURL=script.min.js.map');
+                fs.writeFileSync(this._scriptPath_Min, script.code) // +
+                        // '\r\n\r\n//# sourceMappingURL=script.min.js.map');
                 // fs.writeFileSync(this._scriptPath_Map, JSON.stringify(script.map));
 
                 this._header.addTag('js.js', 'script', {

@@ -4,6 +4,7 @@
         "ab-fs-matcher": "",
         "ab-fs-watcher": "",
         "ab-tasks": "https://github.com/allblue-pl/js_ab-tasks",
+        "ab-xml-parser": "",
         "js0": "https://github.com/allblue-pl/js_js0",
         "js-libs": ""
     }
