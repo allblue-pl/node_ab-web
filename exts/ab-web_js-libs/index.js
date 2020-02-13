@@ -21,7 +21,7 @@ class abWeb_JSLibs extends abWeb.Ext
         this._scriptsToBuild = [];
 
         this._js.addScriptsGroup('js-libs', {
-            before: [ 'js.js' ],
+            before: [ 'js.compile.js' ],
         });
     }
 
@@ -34,7 +34,7 @@ class abWeb_JSLibs extends abWeb.Ext
 
         this._libPaths.set(libName, libPath);
         this._js.addScriptsGroup(`js-libs.${libName}`, {
-            after: [ 'js.js-libs' ],
+            after: [ 'js.compile.js-libs' ],
         });
 
         this.watch(libName, [ 'add', 'unlink', 'change' ], 

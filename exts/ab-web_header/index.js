@@ -44,6 +44,11 @@ class abWeb_Header extends abWeb.Ext
         this.build();
     }
 
+    hasTagsGroup(groupId)
+    {
+        return this._tagsGroups.has(groupId);
+    }
+
     getHtml()
     {
         /* Sort */

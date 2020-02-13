@@ -7,6 +7,7 @@ const abFS = require('ab-fs');
 const abWeb = require('../../.');
 const babel = require('@babel/core');
 const chalk = require('chalk');
+const uglifyJS = require('uglify-js');
 
 // const abFS = require('ab-fs');
 
@@ -18,8 +19,13 @@ class abWeb_JS extends abWeb.Ext
     { super(ab_web, ext_path);
         this._header = this.uses('header');
 
-        this._scriptsGroups = new abWeb.Groups();
-        this.addScriptsGroup('js');
+        this._scriptsGroups_Include = new abWeb.Groups();
+        this.addScriptsGroup('js', {}, 'include');
+
+        this._scriptsGroups_Compile = new abWeb.Groups();
+        this.addScriptsGroup('js', {
+            after: [ 'js.include.js' ],
+        }, 'compile');
 
         this._jsPath = path.join(this.buildInfo.front, 'js');
         if (!abFS.existsDirSync(this._jsPath))
@@ -30,32 +36,55 @@ class abWeb_JS extends abWeb.Ext
         this._scriptPath_Map = path.join(this.buildInfo.front, 'js', 'script.min.js.map');
     }
 
-    addScript(groupId, scriptPath)
+    addScript(groupId, scriptPath, type = 'compile')
     {
-        groupId = `js.${groupId}`;
+        groupId = `js.${type}.${groupId}`;
+        let scriptsGroups = this.getScriptsGroups(type);
 
-        if (!this._scriptsGroups.has(groupId))
-            this.addScriptsGroup(groupId);
+        if (!scriptsGroups.has(groupId))
+            this.addScriptsGroup(groupId, {}, type);
 
-        this._scriptsGroups.addValue(groupId, scriptPath);
+        scriptsGroups.addValue(groupId, scriptPath);
         this.build();
     }
 
-    addScriptsGroup(groupId, props = {})
+    addScript_Compile(groupId, scriptPath)
     {
-        groupId = `js.${groupId}`;
+        this.addScript(groupId, scriptPath, 'compile');
+    }
+
+    addScript_Include(groupId, scriptPath)
+    {
+        this.addScript(groupId, scriptPath, 'include');
+    }
+
+    addScriptsGroup(groupId, props = {}, type = 'compile')
+    {
+        groupId = `js.${type}.${groupId}`;
 
         this._header.addTagsGroup(groupId, props);
-        this._scriptsGroups.add(groupId, props);
+
+        this.getScriptsGroups(type).add(groupId, props);
     }
 
-    clearScriptsGroup(groupId)
+    clearScriptsGroup(groupId, type = 'compile')
     {
-        groupId = `js.${groupId}`;
+        groupId = `js.${type}.${groupId}`;
 
-        this._scriptsGroups.clear(groupId);
+        this.getScriptsGroups(type).clear(groupId);
         this.build();
     }
+
+    getScriptsGroups(type)
+    {
+        if (type === 'compile')
+            return this._scriptsGroups_Compile;
+        else if (type === 'include')
+            return this._scriptsGroups_Include;
+        
+        throw new Error('Unknown script type.');
+    }
+
 
     _compareSets(setA, setB)
     {
@@ -76,50 +105,71 @@ class abWeb_JS extends abWeb.Ext
     {
         this.console.info('Building...');
 
-        for (let groupId of this._scriptsGroups.getGroupIds())
-            this._header.clearTagsGroup(groupId);
+        let types = [ 'include', 'compile' ];
+        for (let type of types) {
+            for (let groupId of this.getScriptsGroups(type).getGroupIds())
+                this._header.clearTagsGroup(groupId);
+        }
 
         if (this.buildInfo.type('rel')) {
-            let js = '';
-            let scriptGroups = this._scriptsGroups.getValues();
-            for (let [ groupId, scriptPaths ] of scriptGroups) {
-                this.console.info('    - ' + groupId);
-                for (let fsPath of scriptPaths) {
-                    js += `\r\n// File: ${fsPath}\r\n`;
-                    js += fs.readFileSync(fsPath) + '\r\n';
-                    
-                    let relPath = path.relative(this.buildInfo.index, fsPath)
-                            .replace(/\\/g, '/');
-                    this.console.log('    - ' + relPath);
+            let js = {
+                include: '',
+                compile: '',
+            };
+            for (let type of types) {
+                this.console.log(`Type (${type}):`);
+
+                let scriptGroups = this.getScriptsGroups(type).getValues();
+                for (let [ groupId, scriptPaths ] of scriptGroups) {
+                    this.console.info('    - ' + groupId);
+                    for (let fsPath of scriptPaths) {
+                        js[type] += `\r\n// File: ${fsPath}\r\n`;
+                        js[type] += fs.readFileSync(fsPath) + '\r\n';
+                        
+                        let relPath = path.relative(this.buildInfo.index, fsPath)
+                                .replace(/\\/g, '/');
+                        this.console.log('    - ' + relPath);
+                    }
                 }
             }
+            
+            /* script.js */
+            // fs.writeFileSync(this._scriptPath, 
+            //         '/* Include: */\r\n\r\n' + js.include + 
+            //         '\r\n\r\nCompile:\r\n\r\n' + js.compile);
 
-            // let polyfill_MinJS = fs.readFileSync(path.join(
-            //         path.dirname(require.resolve('@babel/polyfill')), 
-            //         '../dist/polyfill.min.js'));
-            // js = '\r\n// File: babel-pollyfill\r\n' + polyfill_MinJS + '\r\n' + js;
-
-            // fs.writeFileSync(this._scriptPath, js);
+            let js_Include_Result = uglifyJS.minify(js.include);
+            if (typeof js_Include_Result.error !== 'undefined')
+                this.console.error(js_Include_Result.error);
 
             try {
-                let script = babel.transform(js, {
-                    presets: [ require('@babel/preset-env') ], // [ require.resolve('babel-preset-es2015-script') ],
+                let script = babel.transform(js.compile, {
+                    presets: [ require('@babel/preset-env') ],
                     // inputSourceMap: this._scriptPath,
                     // sourceMaps: true,
                     minified: true,
                 });
-                fs.writeFileSync(this._scriptPath_Min, script.code) // +
+                fs.writeFileSync(this._scriptPath_Min, js_Include_Result.code + 
+                        '\r\n' + script.code) 
+                // +
                         // '\r\n\r\n//# sourceMappingURL=script.min.js.map');
                 // fs.writeFileSync(this._scriptPath_Map, JSON.stringify(script.map));
 
-                this._header.addTag('js.js', 'script', {
+                if (this._header.hasTagsGroup('js.min'))
+                    this._header.clearTagsGroup('js.min');
+                else
+                    this._header.addTagsGroup('js.min');
+
+                this._header.addTag('js.min', 'script', {
                     src: this.uri(this._scriptPath_Min + '?v=' + this.buildInfo.hash),
                     type: 'text/javascript',
                 }, '');
 
+                this._header.build();
+
                 this.console.success('Finished.');
             } catch (err) {
-                this._header.addTag('js.js', 'script', {
+                this._header.addTag('js.min', 'script', {
                     src: this.uri(this._scriptPath_Min + '?v=' + this.buildInfo.hash),
                     type: 'text/javascript',
                 }, '');
@@ -128,21 +178,25 @@ class abWeb_JS extends abWeb.Ext
             }
         } else {
             this.console.log('Scripts:');
-            let scriptGroups = this._scriptsGroups.getValues();
-            for (let [ groupId, scriptPaths ] of scriptGroups) {
-                this.console.info('    - ' + groupId);
-                for (let fsPath of scriptPaths) {
-                    let relPath = path.relative(this.buildInfo.index, fsPath)
-                            .replace(/\\/g, '/');
-                    let uri = this.buildInfo.base + relPath + '?v=' +
-                            this.buildInfo.hash;
+            for (let type of types) {
+                this.console.log(`Type (${type}):`)
 
-                    this._header.addTag(groupId, 'script', {
-                        src: uri,
-                        type: 'text/javascript',
-                    }, '');
-        
-                    this.console.log('    - ' + relPath);
+                let scriptGroups = this.getScriptsGroups(type).getValues();
+                for (let [ groupId, scriptPaths ] of scriptGroups) {
+                    this.console.info('    - ' + groupId);
+                    for (let fsPath of scriptPaths) {
+                        let relPath = path.relative(this.buildInfo.index, fsPath)
+                                .replace(/\\/g, '/');
+                        let uri = this.buildInfo.base + relPath + '?v=' +
+                                this.buildInfo.hash;
+
+                        this._header.addTag(groupId, 'script', {
+                            src: uri,
+                            type: 'text/javascript',
+                        }, '');
+            
+                        this.console.log('    - ' + relPath);
+                    }
                 }
             }
 
@@ -159,17 +213,28 @@ class abWeb_JS extends abWeb.Ext
     __onChange(fsPaths, changes)
     {
         if (this.buildInfo.type('dev')) {
-            let currentFSPaths = this._scriptsGroups.getGroup('js.js');
-            if (!this._compareSets(fsPaths.files, currentFSPaths)) {
-                this.clearScriptsGroup('js');
-                for (let scriptPath of fsPaths.files)
-                    this.addScript('js', scriptPath);
-                this.build();
+            let types = [ 'include', 'compile' ];
+            let build = false;
+            for (let type of types) {
+                let currentFSPaths = this.getScriptsGroups(type).getGroup(`js.${type}.js`);
+                if (!this._compareSets(fsPaths[type], currentFSPaths)) {
+                    this.clearScriptsGroup('js', type);
+                    for (let scriptPath of fsPaths[type])
+                        this.addScript('js', scriptPath, type);
+                    build = true;
+                }
             }
+
+            if (build)
+                this.build();
         } else {
-            this.clearScriptsGroup('js');
-            for (let scriptPath of fsPaths.files)
-                this.addScript('js', scriptPath);
+            let types = [ 'include', 'compile' ];
+            for (let type of types) {
+                this.clearScriptsGroup('js', type);
+                for (let scriptPath of fsPaths[type])
+                    this.addScript('js', scriptPath, type);
+            }
+
             this.build();
         }
     }
@@ -183,11 +248,25 @@ class abWeb_JS extends abWeb.Ext
         //     },
         // });
 
+        if ('include' in config) {
+            if (this.buildInfo.type('dev'))
+                this.watch('include', [ 'add', 'unlink' ], config.include);
+            else if (this.buildInfo.type('rel'))
+                this.watch('include', [ 'add', 'unlink', 'change' ], config.include);
+        }
+
+        if ('compile' in config) {
+            if (this.buildInfo.type('dev'))
+                this.watch('compile', [ 'add', 'unlink' ], config.compile);
+            else if (this.buildInfo.type('rel'))
+                this.watch('compile', [ 'add', 'unlink', 'change' ], config.compile);
+        }
+
         if ('paths' in config) {
             if (this.buildInfo.type('dev'))
-                this.watch('files', [ 'add', 'unlink' ], config.paths);
+                this.watch('compile', [ 'add', 'unlink' ], config.paths);
             else if (this.buildInfo.type('rel'))
-                this.watch('files', [ 'add', 'unlink', 'change' ], config.paths);
+                this.watch('compile', [ 'add', 'unlink', 'change' ], config.paths);
         }
 
         this.build();
