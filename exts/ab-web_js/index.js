@@ -161,7 +161,7 @@ class abWeb_JS extends abWeb.Ext
                     this._header.addTagsGroup('js.min');
 
                 this._header.addTag('js.min', 'script', {
-                    src: this.uri(this._scriptPath_Min + '?v=' + this.buildInfo.hash),
+                    src: this.uri(this._scriptPath_Min),
                     type: 'text/javascript',
                 }, '');
 
@@ -170,7 +170,7 @@ class abWeb_JS extends abWeb.Ext
                 this.console.success('Finished.');
             } catch (err) {
                 this._header.addTag('js.min', 'script', {
-                    src: this.uri(this._scriptPath_Min + '?v=' + this.buildInfo.hash),
+                    src: this.uri(this._scriptPath_Min),
                     type: 'text/javascript',
                 }, '');
 
