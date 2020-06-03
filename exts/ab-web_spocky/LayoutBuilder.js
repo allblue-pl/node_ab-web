@@ -83,7 +83,12 @@ export default class ${layoutName} extends spocky.Layout {
     {
         let lTextsArr = [];
 
-        let r = /\${?([a-zA-Z0-9._]+)}?(\(.*\))?/g;
+        let regexpStrs_FieldName = '([a-zA-Z][a-zA-Z0-9._]*)+?(\\((.*)\\))?';
+        let regexpStrs_Expression = '\\?\\((.+)\\)';
+
+        regexpStrs_FieldName = '\\${?' + regexpStrs_FieldName + '}?';
+
+        let r = new RegExp(`(${regexpStrs_FieldName})|(${regexpStrs_Expression})`, 'g');
         let offset = 0;
         while(true) {
             let match = r.exec(content);
@@ -94,8 +99,14 @@ export default class ${layoutName} extends spocky.Layout {
             if (text !== '')
                 lTextsArr.push(text);
 
-            let args = typeof match[2] === 'undefined' ? '' : match[2];
-            lTextsArr.push(`$${match[1]}${args}`);
+            if (typeof match[1] !== 'undefined') {
+                let args = typeof match[3] === 'undefined' ? '' : match[3];
+                lTextsArr.push(`$${match[2]}${args}`);    
+            } else if (typeof match[5] !== 'undefined') {
+                lTextsArr.push(match[5]);    
+            } else
+                throw new Error('Unknown match: ' + match[0]);
+
             offset = match.index + match[0].length;
         }
 
