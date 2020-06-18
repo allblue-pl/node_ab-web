@@ -84,7 +84,7 @@ export default class ${layoutName} extends spocky.Layout {
         let lTextsArr = [];
 
         let regexpStrs_FieldName = '([a-zA-Z][a-zA-Z0-9._]*)+?(\\((.*)\\))?';
-        let regexpStrs_Expression = '\\?\\((.+)\\)';
+        let regexpStrs_Expression = '\\?\\(((.|\\s|\\S)+)\\)';
 
         regexpStrs_FieldName = '\\${?' + regexpStrs_FieldName + '}?';
 
