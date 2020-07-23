@@ -21,7 +21,8 @@ class abWeb_Sass extends abWeb.Ext
             abFS.dir.createRecursiveSync(this.cssDir);
         }
 
-        this._sourceDirPath = this.cssDir;
+        let relDir = path.relative(this.buildInfo.index, this.buildInfo.front);
+        this._sourceDirPath = relDir;
         this._sourcePath = path.join(this.cssDir, 'sass.css');
 
         this._header.addTag('sass', 'link', {

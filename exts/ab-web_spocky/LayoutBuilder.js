@@ -58,20 +58,13 @@ export default class ${layoutName} extends spocky.Layout {
     static AddNode(parentLayoutNode, node)
     {
         if (node.type === 'text') {
-            let lTextsArr = LayoutBuilder.ParseFields(node.value);
-            // console.log(lTextsArr);
-            for (let lText of lTextsArr)
-                parentLayoutNode.push(lText);
+            parentLayoutNode.push(node.value);
             return;
         } else if (node.type === 'comment') {
             /* To Do */ 
             return;
         } else if (node.type === 'element') {
-            let attribs = {};
-            for (let attribName in node.attribs)
-                attribs[attribName] = LayoutBuilder.ParseFields(node.attribs[attribName]);
-
-            let lNode = [ node.name, attribs ];
+            let lNode = [ node.name, node.attribs ];
             parentLayoutNode.push(lNode);
 
             for (let childNode of node.children)

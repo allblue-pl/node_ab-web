@@ -15,7 +15,7 @@ class abWeb_Dist extends abWeb.Ext
 
     constructor(abWeb, extPath)
     { super(abWeb, extPath);
-
+        this._path = 'dist';
     }
 
 
@@ -28,12 +28,11 @@ class abWeb_Dist extends abWeb.Ext
     __onChange(fsPaths, changes)
     {
         for (let fsPath of fsPaths.files) {
-            let fileRelPath = path.relative(path.join(this.buildInfo.index, 'dev'), 
+            let fileRelPath = path.relative(path.join('..', 'dev'), 
                     fsPath);
+            let distPath = path.join(this.buildInfo.index, this._path, fileRelPath);
 
-            let distPath = path.join(this.buildInfo.index, 'dist', fileRelPath);
             let distDirPath = path.dirname(distPath);
-
             if (!fs.existsSync(distDirPath))
                 abFS.mkdirRecursiveSync(distDirPath);
             fs.copyFile(fsPath, distPath, () => {
@@ -44,6 +43,13 @@ class abWeb_Dist extends abWeb.Ext
 
     __parse(config)
     {
+        if ('path' in config)
+            this._path = config.path;
+
+        let distPath = path.join(this.buildInfo.index, 'dist');
+        if (fs.existsSync(distPath))
+            abFS.removeSync(distPath);
+
         if (!this.buildInfo.type('rel'))
             return;
 

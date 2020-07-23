@@ -144,13 +144,20 @@ class abWeb_JS extends abWeb.Ext
 
             try {
                 let script = babel.transform(js.compile, {
-                    presets: [ require('@babel/preset-env') ],
+                    presets: [ [require('@babel/preset-env'), {
+                        useBuiltIns: 'entry',
+                        corejs: 3,
+                    }], ],
+                    // plugins: [ require('@babel/plugin-tranform-runtime'), ],
                     // inputSourceMap: this._scriptPath,
                     // sourceMaps: true,
                     minified: true,
                 });
-                fs.writeFileSync(this._scriptPath_Min, js_Include_Result.code + 
-                        '\r\n' + script.code) 
+                fs.writeFileSync(this._scriptPath_Min, 
+                        js_Include_Result.code + "\r\n" +
+                        fs.readFileSync(__dirname + '/../../node_modules/core-js-bundle/minified.js') + "\r\n" +
+                        fs.readFileSync(__dirname + '/../../node_modules/regenerator-runtime/runtime.js') + "\r\n" +
+                        script.code); 
                 // +
                         // '\r\n\r\n//# sourceMappingURL=script.min.js.map');
                 // fs.writeFileSync(this._scriptPath_Map, JSON.stringify(script.map));

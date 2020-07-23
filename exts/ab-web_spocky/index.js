@@ -4,6 +4,8 @@ const
     fs = require('fs'),
     path = require('path'),
 
+    abFS = require('ab-fs'),
+
     abWeb = require('../..'),
     js0 = require('js0'),
 
@@ -214,6 +216,12 @@ class abWeb_Spocky extends abWeb.Ext
 
         let packagePaths = [];
         for (let fsPath of config.packages) {
+            let layoutsPath = path.join(fsPath, 'js-lib', '$layouts');
+            if (fs.existsSync(layoutsPath)) {
+                abFS.removeSync(layoutsPath);
+                fs.mkdirSync(layoutsPath);
+            }
+
             // layoutPaths.push(path.join(fsPath, 'layouts/*.html'));
             packagePaths.push(fsPath);
         }
