@@ -46,10 +46,6 @@ class abWeb_Dist extends abWeb.Ext
         if ('path' in config)
             this._path = config.path;
 
-        let distPath = path.join(this.buildInfo.index, 'dist');
-        if (fs.existsSync(distPath))
-            abFS.removeSync(distPath);
-
         if (!this.buildInfo.type('rel'))
             return;
 
@@ -59,6 +55,16 @@ class abWeb_Dist extends abWeb.Ext
         this.watch('files', [ 'add', 'unlink', 'change' ], config.paths);
 
         this.build();
+    }
+
+    __parse_Pre(config)
+    {
+        if ('path' in config)
+            this._path = config.path;
+
+        let distPath = path.join(this.buildInfo.index, 'dist');
+        if (fs.existsSync(distPath))
+            abFS.removeSync(distPath);
     }
     /* / abWeb.Ext Overrides */
 

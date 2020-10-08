@@ -173,6 +173,8 @@ class abWeb_JSLibs extends abWeb.Ext
             return;
         }
 
+        this.buildPath = path.join(this.buildInfo.front, config.build.dev);
+
         let scriptPath = path.join(path.dirname(configPath), config.path);
 
         if (!fs.existsSync(scriptPath)) {
@@ -180,8 +182,6 @@ class abWeb_JSLibs extends abWeb.Ext
             return;
         }
         this.scriptPath = scriptPath;
-
-        this.buildPath = config.build.dev;
 
         if (!('libs' in config))
             return;

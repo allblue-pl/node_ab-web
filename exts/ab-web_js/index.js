@@ -224,6 +224,7 @@ class abWeb_JS extends abWeb.Ext
             let build = false;
             for (let type of types) {
                 let currentFSPaths = this.getScriptsGroups(type).getGroup(`js.${type}.js`);
+                console.log(fsPaths, type);
                 if (!this._compareSets(fsPaths[type], currentFSPaths)) {
                     this.clearScriptsGroup('js', type);
                     for (let scriptPath of fsPaths[type])

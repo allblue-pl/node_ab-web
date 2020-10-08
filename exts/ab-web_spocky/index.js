@@ -216,18 +216,32 @@ class abWeb_Spocky extends abWeb.Ext
 
         let packagePaths = [];
         for (let fsPath of config.packages) {
-            let layoutsPath = path.join(fsPath, 'js-lib', '$layouts');
-            if (fs.existsSync(layoutsPath)) {
-                abFS.removeSync(layoutsPath);
-                fs.mkdirSync(layoutsPath);
-            }
-
             // layoutPaths.push(path.join(fsPath, 'layouts/*.html'));
             packagePaths.push(fsPath);
         }
 
         this.watch('layouts', [ 'add', 'unlink', 'change' ], this._layoutPaths_Watched);
         this.watch('packages', [ 'add' ], packagePaths);
+    }
+
+    __parse_Pre(config)
+    {
+        if (!('packages' in config))
+            return;
+
+        if (!('path' in config)) {
+            this.console.error('Spockies module path not set.');
+            return;
+        }
+
+        let packagePaths = [];
+        for (let fsPath of config.packages) {
+            let layoutsPath = path.join(fsPath, 'js-lib', '$layouts');
+            if (fs.existsSync(layoutsPath)) {
+                abFS.removeSync(layoutsPath);
+                fs.mkdirSync(layoutsPath);
+            }
+        }
     }
     /* / abWeb.Ext Overrides */
 

@@ -1,0 +1,15 @@
+'use strict';
+
+module.exports.init = function(conf, data) 
+{
+    conf.init('jquery');
+
+    conf.extendArray(data['sass']['paths'], [
+        '../dev/node_modules/ab-bootstrap/scss',
+    ]);
+
+    conf.extendArray(data['js']['include'], [
+        '../dev/node_modules/bootstrap/dist/js/bootstrap.bundle.min.js',
+        '../dev/node_modules/popperpopper.js/dist/umd/popper.js',
+    ]);
+}

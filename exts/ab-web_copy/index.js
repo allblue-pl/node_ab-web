@@ -56,11 +56,27 @@ class abWeb_Copy extends abWeb.Ext
         let watchPaths = [];
         for (let fsPaths of config.paths) {
             let distPath = path.join(this.buildInfo.index, fsPaths[1]);
-            if (fs.existsSync(distPath))
-                abFS.removeSync(distPath);
             watchPaths.push(fsPaths[0]);
         }
         this.watch('files', [ 'add', 'unlink', 'change' ], watchPaths);
+    }
+
+    __parse_Pre(config)
+    {
+        this._config = config;
+
+        if (!this.buildInfo.type('rel'))
+            return;
+
+        if (!('paths' in config))
+            return;
+
+        let watchPaths = [];
+        for (let fsPaths of config.paths) {
+            let distPath = path.join(this.buildInfo.index, fsPaths[1]);
+            if (fs.existsSync(distPath))
+                abFS.removeSync(distPath);
+        }
     }
     /* / abWeb.Ext Overrides */
 
