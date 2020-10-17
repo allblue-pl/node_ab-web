@@ -153,10 +153,16 @@ class abWeb_JS extends abWeb.Ext
                     // sourceMaps: true,
                     minified: true,
                 });
+
+                let modulePaths_CoreJSBundle = require.resolve('core-js-bundle');
+                // __dirname + '/../../node_modules/core-js-bundle/
+                let modulePaths_RegeneratorRuntime = require.resolve(regenerator-runtime);
+                // __dirname + '/../../node_modules/regenerator-runtime
+
                 fs.writeFileSync(this._scriptPath_Min, 
                         js_Include_Result.code + "\r\n" +
-                        fs.readFileSync(__dirname + '/../../node_modules/core-js-bundle/minified.js') + "\r\n" +
-                        fs.readFileSync(__dirname + '/../../node_modules/regenerator-runtime/runtime.js') + "\r\n" +
+                        fs.readFileSync(modulePaths_CoreJSBundle + '/minified.js') + "\r\n" +
+                        fs.readFileSync(modulePaths_RegeneratorRuntime + '/runtime.js') + "\r\n" +
                         script.code); 
                 // +
                         // '\r\n\r\n//# sourceMappingURL=script.min.js.map');
