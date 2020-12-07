@@ -19,7 +19,7 @@ class abWeb_Header extends abWeb.Ext
     constructor(ab_web, ext_path)
     { super(ab_web, ext_path);
         this._filePath = path.join(this.buildInfo.back, 'header.html');
-        this._tagsGroups = new abWeb.Groups();
+        this._tagsGroups = new abWeb.Groups(this);
     }
 
     addTag(groupId, ...args)

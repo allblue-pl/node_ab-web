@@ -19,10 +19,10 @@ class abWeb_JS extends abWeb.Ext
     { super(ab_web, ext_path);
         this._header = this.uses('header');
 
-        this._scriptsGroups_Include = new abWeb.Groups();
+        this._scriptsGroups_Include = new abWeb.Groups(this);
         this.addScriptsGroup('js', {}, 'include');
 
-        this._scriptsGroups_Compile = new abWeb.Groups();
+        this._scriptsGroups_Compile = new abWeb.Groups(this);
         this.addScriptsGroup('js', {
             after: [ 'js.include.js' ],
         }, 'compile');
@@ -154,9 +154,9 @@ class abWeb_JS extends abWeb.Ext
                     minified: true,
                 });
 
-                let modulePaths_CoreJSBundle = require.resolve('core-js-bundle');
+                let modulePaths_CoreJSBundle = path.dirname(require.resolve('core-js-bundle'));
                 // __dirname + '/../../node_modules/core-js-bundle/
-                let modulePaths_RegeneratorRuntime = require.resolve(regenerator-runtime);
+                let modulePaths_RegeneratorRuntime = path.dirname(require.resolve('regenerator-runtime'));
                 // __dirname + '/../../node_modules/regenerator-runtime
 
                 fs.writeFileSync(this._scriptPath_Min, 
@@ -230,7 +230,6 @@ class abWeb_JS extends abWeb.Ext
             let build = false;
             for (let type of types) {
                 let currentFSPaths = this.getScriptsGroups(type).getGroup(`js.${type}.js`);
-                console.log(fsPaths, type);
                 if (!this._compareSets(fsPaths[type], currentFSPaths)) {
                     this.clearScriptsGroup('js', type);
                     for (let scriptPath of fsPaths[type])
