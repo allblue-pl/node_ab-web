@@ -55,6 +55,7 @@ class abWeb_Copy extends abWeb.Ext
 
         let watchPaths = [];
         for (let fsPaths of config.paths) {
+            console.log(config.paths);
             let distPath = path.join(this.buildInfo.index, fsPaths[1]);
             watchPaths.push(fsPaths[0]);
         }

@@ -134,13 +134,13 @@ class abWeb_JS extends abWeb.Ext
             }
             
             /* script.js */
-            // fs.writeFileSync(this._scriptPath, 
-            //         '/* Include: */\r\n\r\n' + js.include + 
-            //         '\r\n\r\nCompile:\r\n\r\n' + js.compile);
+            // fs.writeFileSync(this._scriptPath + '.debug', js.include);
 
             let js_Include_Result = uglifyJS.minify(js.include);
-            if (typeof js_Include_Result.error !== 'undefined')
+            if (typeof js_Include_Result.error !== 'undefined') {
+                // console.log('Test', js_Include_Result);
                 this.console.error(js_Include_Result.error);
+            }
 
             try {
                 let script = babel.transform(js.compile, {
