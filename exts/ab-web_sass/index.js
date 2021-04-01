@@ -23,22 +23,20 @@ class abWeb_Sass extends abWeb.Ext
 
         let relDir = path.relative(this.buildInfo.index, this.buildInfo.front);
         this._sourceDirPath = relDir;
+        this._sourcePath_Base = path.join(this.cssDir, 'sass');
         this._sourcePath = path.join(this.cssDir, 'sass.css');
-
-        this._header.addTag('sass', 'link', {
-            rel: "stylesheet",
-            href: this.uri(this._sourcePath, true),
-            type: "text/css"
-        });
 
         this._variablesPaths = [];
         this._stylesPaths = [];
+
+        this._variants = [];
     }
 
 
-    _createCss(cssSource)
+    _createCss(cssSource, sourceAlias)
     {
-        let cssPath = path.join(this.cssDir, 'sass.css');
+        let cssPath = path.join(this.cssDir, sourceAlias === '_default' ? 
+                'sass.css' : `sass-${sourceAlias}.css`);
 
         // let indexPath = this.buildInfo.index;
 
@@ -67,33 +65,75 @@ class abWeb_Sass extends abWeb.Ext
         fs.writeFileSync(cssPath, cssSource);
     }
 
-    _getSource(fsPaths)
+    _getSources(fsPaths)
     {
-        let sassSource = '';
+        let sources = {
+            '_default': '',
+        };
+        for (let variant of this._variants) {
+            sources[variant] = '';
+        }
 
         this.console.log('Variables:');
-        let variablePaths = fsPaths.variables;
-        for (let variables_FSPath of fsPaths.variables) {
-            let relativePath = path.relative(this._sourceDirPath, variables_FSPath);
+        for (let fsPath of fsPaths.variables) {
+            let relativePath = path.relative(this._sourceDirPath, fsPath);
             relativePath = relativePath.replace(/\\/g, '/');
 
-            sassSource += '@import "' + relativePath + '";\r\n';
+            sources['_default'] += '@import "' + relativePath + '";\r\n';
+            for (let variant of this._variants) {
+                sources[variant] += '@import "' + relativePath + '";\r\n';
+            }
 
             this.console.log('    - ' + relativePath);
         }
-        sassSource += '\r\n';
+
+        for (let variant of this._variants) {
+            this.console.log('Variant: ' + variant);
+            
+            for (let fsPath of fsPaths[`variants.${variant}.variables`]) {
+                let relativePath = path.relative(this._sourceDirPath, fsPath);
+                relativePath = relativePath.replace(/\\/g, '/');
+    
+                sources[variant] += '@import "' + relativePath + '";\r\n';
+
+                this.console.log('    - ' + relativePath);
+            }
+        }
+        // sassSource += '\r\n';
 
         this.console.log('Styles:');
-        for (let styles_FSPath of fsPaths.styles) {
-            let relativePath = path.relative(this._sourceDirPath, styles_FSPath);
+        for (let fsPath of fsPaths.styles) {
+            if (path.basename(fsPath) === 'variables.scss')
+                continue;
+
+            let relativePath = path.relative(this._sourceDirPath, fsPath);
             relativePath = relativePath.replace(/\\/g, '/');
 
-            sassSource += '@import "' + relativePath + '";\r\n';
+            sources['_default'] += '@import "' + relativePath + '";\r\n';
+            for (let variant of this._variants) {
+                sources[variant] += '@import "' + relativePath + '";\r\n';
+            }
 
             this.console.log('    - ' + relativePath);
         }
 
-        return sassSource;
+        for (let variant of this._variants) {
+            this.console.log('Variant: ' + variant);
+            
+            for (let fsPath of fsPaths[`variants.${variant}.styles`]) {
+                if (path.basename(fsPath) === 'variables.scss')
+                    continue;
+
+                let relativePath = path.relative(this._sourceDirPath, fsPath);
+                relativePath = relativePath.replace(/\\/g, '/');
+    
+                sources[variant] += '@import "' + relativePath + '";\r\n';
+
+                this.console.log('    - ' + relativePath);
+            }
+        }
+
+        return sources;
     }
 
     _parseSource(url, prev, done)
@@ -181,75 +221,61 @@ class abWeb_Sass extends abWeb.Ext
     /* abWeb.Ext Overrides */
     __build(taskName)
     {
-        return new Promise((resolve, reject) => {
-            this.console.info('Building...');
+        let promises = [];
+        for (let sourceAlias in this._sources) {
+            let sourcePath = sourceAlias === '_default' ? 
+                    this._sourcePath : (this._sourcePath_Base + '-' + 
+                    sourceAlias + '.css');
 
-            let compress = false;
-            let dumpLineNumbers = 'comments';
+            promises.push(() => { return new Promise((resolve, reject) => {
+                let compress = false;
+                let dumpLineNumbers = 'comments';
 
-            if (this.buildInfo.type('rel')) {
-                compress = true;
-                dumpLineNumbers = null
-            }
-
-            let urlPaths = [];
-            nodeSass.render({
-                data: this._source,
-                file: this._sourcePath,
-                includePaths: [ this._sourceDirPath ],
-                importer: (url, prev, done) => {                    
-                    return this._parseSource(url, prev, done);
-                },
-                outputStyle: this.buildInfo.type('rel') ? 'compressed' : 'nested',
-            }, (err, result) => {
-                if (err) {
-                    this.console.error('Error compiling sass.');
-                    this.console.warn(err);
-                    this.console.warn('  File: ' + err.file)
-                    this.console.warn('  Index: ' + err.column)
-                    this.console.warn('  Line: ' + err.line)
-
-                    resolve(); return;
+                if (this.buildInfo.type('rel')) {
+                    compress = true;
+                    dumpLineNumbers = null
                 }
 
-                this._createCss(result.css.toString('utf-8'));
+                let urlPaths = [];
+                nodeSass.render({
+                    data: this._sources[sourceAlias],
+                    file: sourcePath,
+                    includePaths: [ this._sourceDirPath ],
+                    importer: (url, prev, done) => {                    
+                        return this._parseSource(url, prev, done);
+                    },
+                    outputStyle: this.buildInfo.type('rel') ? 'compressed' : 'nested',
+                }, (err, result) => {
+                    if (err) {
+                        this.console.error('Error compiling sass.');
+                        this.console.warn(err);
+                        this.console.warn('  File: ' + err.file)
+                        this.console.warn('  Index: ' + err.column)
+                        this.console.warn('  Line: ' + err.line)
 
-                this._header.build();
+                        resolve(); return;
+                    }
 
-                this.console.success('Finished.');
-                resolve();
-            });
+                    this._createCss(result.css.toString('utf-8'), sourceAlias);
+                    
+                    resolve();
+                });
+            })});
+        }
+    
+        return (async () => {
+            for (let promise of promises)
+                await promise();
 
-            // less.render(this._source, {
-            //     paths: [ this._sourcePath ],
-            //     filename: 'source.less',
-            //     compress: compress,
-            //     dumpLineNumbers: dumpLineNumbers,
-            //     relativeUrls: true
-            // },(err, output) => {
-            //     if (err) {
-            //         this.console.error('Error compiling less.');
-            //         this.console.warn(err);
-            //         this.console.warn('  File: ' + err.filename)
-            //         this.console.warn('  Index: ' + err.index)
-            //         this.console.warn('  Line: ' + err.line)
+            this._header.build();
 
-            //         reject();
-            //     }
-
-            //     this._createCss(output.css);
-
-            //     this._header.build();
-
-            //     this.console.success('Finished.');
-            //     resolve();
-            // });
-        });
+            this.console.success('Finished.');
+        })();
     }
 
     __onChange(fsPaths, changes)
     {        
-        this._source = this._getSource(fsPaths);
+        this._sources = this._getSources(fsPaths);
         this.build();
     }
 
@@ -258,8 +284,18 @@ class abWeb_Sass extends abWeb.Ext
         if (!('paths' in config))
             return;
 
+        if (config.addToHeader) {
+            this._header.addTag('sass', 'link', {
+                rel: "stylesheet",
+                href: this.uri(this._sourcePath, true),
+                type: "text/css"
+            });
+        }
+
         this._variablesPaths = [];
         this._stylesPaths = [];
+        this._variantPaths = {};
+
         let watchPaths = [];
         for (let fsPath of config.paths) {
             if (path.extname(fsPath) === '.scss' || path.extname(fsPath) === '.css') {
@@ -275,9 +311,35 @@ class abWeb_Sass extends abWeb.Ext
                 this.console.error('Unknown extension type: ', fsPath);
         }
 
+        for (let variant in config.variants) {
+            this._variants.push(variant);
+
+            let variant_VariablePaths = [];
+            let variant_StylePaths = [];
+
+            for (let fsPath of config.variants[variant]) {
+                if (path.extname(fsPath) === '.scss' || 
+                        path.extname(fsPath) === '.css') {
+    
+                    variant_StylePaths.push(path.join(path.dirname(fsPath), '*.*css'));
+                } else if (path.extname(fsPath) === '') {
+                    variant_VariablePaths.push(path.join(fsPath, 'variables.scss'));
+                    variant_StylePaths.push(path.join(fsPath, 'styles.scss'));
+    
+                    variant_StylePaths.push(path.join(fsPath, '*.*css'));
+                } else
+                    this.console.error('Unknown extension type: ', fsPath);
+            }
+
+            this.watch(`variants.${variant}.variables`, [ 'add', 'unlink', 'change' ], 
+                    variant_VariablePaths);
+            this.watch(`variants.${variant}.styles`, [ 'add', 'unlink', 'change' ], 
+                    variant_StylePaths);
+        }
+
         this.watch('scss', [ 'add', 'unlink', 'change' ], watchPaths);
         this.watch('variables', [ 'add', 'unlink', 'change' ], this._variablesPaths);
-        this.watch('styles', [ 'add', 'unlink', 'change' ], this._stylesPaths)
+        this.watch('styles', [ 'add', 'unlink', 'change' ], this._stylesPaths);
     }
     /* / abWeb.Ext Overrides */
 

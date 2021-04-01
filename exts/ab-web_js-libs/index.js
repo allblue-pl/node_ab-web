@@ -173,7 +173,7 @@ class abWeb_JSLibs extends abWeb.Ext
             return;
         }
 
-        this.buildPath = path.join(this.buildInfo.front, config.build.dev);
+        this.buildPath = path.join(this.buildInfo.tmp, config.build.dev);
 
         let scriptPath = path.join(path.dirname(configPath), config.path);
 
