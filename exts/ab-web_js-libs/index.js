@@ -191,7 +191,7 @@ class abWeb_JSLibs extends abWeb.Ext
             this.addLib(libName, config.libs[libName]);
 
         this._js.clearScriptsGroup('js-libs');
-        console.log('Test', this.scriptPath);
+        // console.log('Test', this.scriptPath);
         this._js.addScript('js-libs', this.scriptPath);
 
         this.build();

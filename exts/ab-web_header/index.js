@@ -18,6 +18,7 @@ class abWeb_Header extends abWeb.Ext
 
     constructor(ab_web, ext_path)
     { super(ab_web, ext_path);
+        this._exportHash = [];
         this._filePath = path.join(this.buildInfo.back, 'header.html');
         this._tagsGroups = new abWeb.Groups(this);
     }
@@ -51,11 +52,21 @@ class abWeb_Header extends abWeb.Ext
 
     getHtml()
     {
+        var html = '';
+
+        if (this._exportHash.includes('js')) {
+            html += '<script type="text/javascript">var ABWeb_Hash = "' + 
+                    this.buildInfo.hash + '";</script>';
+        }
+
+        if (this._exportHash.includes('php')) {
+            html += '<?php const ABWeb_Hash = "' + this.buildInfo.hash + '"; ?>';
+        }
+
         /* Sort */
         let tagsGroups = this._tagsGroups.getValues();
 
         /* Html */
-        var html = '';
         for (let [ tagsGroupId, tagsGroup ] of tagsGroups) {            
             html += `<!-- ${tagsGroupId} -->\r\n`;
             for (let tag of tagsGroup)
@@ -115,6 +126,8 @@ class abWeb_Header extends abWeb.Ext
 
     __parse(config)
     {
+        this._exportHash = config.exportHash;
+
         // abWeb.types.conf(config, {
         //     'paths':  {
         //         required: false,
