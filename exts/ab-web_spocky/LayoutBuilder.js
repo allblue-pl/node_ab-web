@@ -29,6 +29,7 @@ class LayoutBuilder
 `'use strict';
 
 const
+    js0 = require('js0'),
     spocky = require('spocky')
 ;
 
@@ -39,9 +40,11 @@ export default class ${layoutName} extends spocky.Layout {
     }
 
 
-    constructor()
+    constructor(defaultFieldValues = {})
     {
-        super(${layoutName}.Content);
+        js0.args(arguments, [ js0.RawObject, js0.Default ]);
+
+        super(${layoutName}.Content, defaultFieldValues);
     }
 
 }
