@@ -2,9 +2,12 @@
 
 module.exports.init = function(conf, data) 
 {
-    conf.init('ab-bootstrap-datetimepicker');
-
-    conf.extendArray(data['spocky'].packages, [
-        '../dev/node_modules/spk-forms',
-    ]);   
+    conf
+        .init('ab-bootstrap-datetimepicker')
+        .extArr(data['sass']['paths'], [
+            '../dev/node_modules/spk-file-upload/scss',
+        ])
+        .extArr(data['spocky']['packages'], [
+            '../dev/node_modules/spk-forms',
+        ]);   
 }

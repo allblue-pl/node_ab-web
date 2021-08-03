@@ -40,7 +40,7 @@ class abWeb_Sass extends abWeb.Ext
 
         let relativeCss = '';
 
-        let regex = /url\(\s*([\'"])(\{(.+?)\})+(.*?)([\'"])\s*\)/gm;
+        let regex = /url\(\s*([\'"])?(\{(.+?)\})+(.*?)([\'"])?\s*\)/gm;
         let regexIndex = 0;
         while (true) {
             let match = regex.exec(css);
@@ -50,15 +50,21 @@ class abWeb_Sass extends abWeb.Ext
             if (match.index <= regexIndex)
                 continue;
 
-            relativeCss += css.substring(regexIndex, match.index);
+            let open = typeof(match[1]) === 'undefined' ? '' : match[1];
+            let close = typeof(match[5]) === 'undefined' ? '' : match[5];
+
+            if (open !== close)
+                continue;
+
+            relativeCss += css.substring(regexIndex, match.index); 
 
             if (match[4].match(/^(((https?:)?\/\/)|(data:))/)) {
-                relativeCss += `url(${match[1]}${match[4]}${match[5]})`;    
+                relativeCss += `url(${open}${match[4]}${close})`;                    
             } else {
                 let relation = path.join(match[3], match[4])
                     .replace(/\\/g, '/');
 
-                relativeCss += `url(${match[1]}${relation}${match[5]})`;   
+                relativeCss += `url(${open}${relation}${close})`;   
             }
 
             regexIndex = match.index + match[0].length;
@@ -170,7 +176,7 @@ class abWeb_Sass extends abWeb.Ext
         
             let relativeSass = '';
 
-            let regex = /url\(\s*([\'"])(?!(?:https?:)?\/\/)(?!data:)(.*?)([\'"])\s*\)/gm;
+            let regex = /url\(\s*([\'"])?(?!(?:https?:)?\/\/)(?!data:)(.*?)([\'"])?\s*\)/gm;
             let regexIndex = 0;
             while (true) {
                 let match = regex.exec(sass);
@@ -180,12 +186,18 @@ class abWeb_Sass extends abWeb.Ext
                 if (match.index <= regexIndex)
                     continue;
 
+                let open = typeof(match[1]) === 'undefined' ? '' : match[1];
+                let close = typeof(match[3]) === 'undefined' ? '' : match[3];
+
+                if (open !== close)
+                    continue;
+
                 relativeSass += sass.substring(regexIndex, match.index);
                 let relation = path.relative(this._sourceDirPath, 
                             path.dirname(urlPath))
                         .replace(/\\/g, '/');
 
-                relativeSass += `url(${match[1]}{${relation}}${match[2]}${match[3]})`;
+                relativeSass += `url(${open}{${relation}}${match[2]}${close})`;
 
                 regexIndex = match.index + match[0].length;
             }
