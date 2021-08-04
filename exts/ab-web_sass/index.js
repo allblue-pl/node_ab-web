@@ -1,11 +1,15 @@
 'use strict';
 
-const fs = require('fs');
-const path = require('path');
+const 
+    fs = require('fs'),
+    path = require('path'),
 
-const abFS = require('ab-fs');
-const abWeb = require('../../.');
-const nodeSass = require('node-sass');
+    abFS = require('ab-fs'),
+    dartSass = require('sass'),
+
+    abWeb = require('../../.')
+;
+// const nodeSass = require('node-sass');
 
 
 class abWeb_Sass extends abWeb.Ext
@@ -88,9 +92,9 @@ class abWeb_Sass extends abWeb.Ext
             let relativePath = path.relative(this._sourceDirPath, fsPath);
             relativePath = relativePath.replace(/\\/g, '/');
 
-            sources['_default'] += '@import "' + relativePath + '";\r\n';
+            sources['_default'] += '@import "{abWeb}' + relativePath + '";\r\n';
             for (let variant of this._variants) {
-                sources[variant] += '@import "' + relativePath + '";\r\n';
+                sources[variant] += '@import "{abWeb}' + relativePath + '";\r\n';
             }
 
             this.console.log('    - ' + relativePath);
@@ -103,7 +107,7 @@ class abWeb_Sass extends abWeb.Ext
                 let relativePath = path.relative(this._sourceDirPath, fsPath);
                 relativePath = relativePath.replace(/\\/g, '/');
 
-                sources[variant] += '@import "' + relativePath + '";\r\n';
+                sources[variant] += '@import "{abWeb}' + relativePath + '";\r\n';
 
                 this.console.log('    - ' + relativePath);
             }
@@ -117,10 +121,12 @@ class abWeb_Sass extends abWeb.Ext
 
             let relativePath = path.relative(this._sourceDirPath, fsPath);
             relativePath = relativePath.replace(/\\/g, '/');
+            if (path.extname(relativePath) === '.css')
+                relativePath += '-abWeb';
 
-            sources['_default'] += '@import "' + relativePath + '";\r\n';
+            sources['_default'] += '@import "{abWeb}' + relativePath + '";\r\n';
             for (let variant of this._variants) {
-                sources[variant] += '@import "' + relativePath + '";\r\n';
+                sources[variant] += '@import "{abWeb}' + relativePath + '";\r\n';
             }
 
             this.console.log('    - ' + relativePath);
@@ -135,8 +141,10 @@ class abWeb_Sass extends abWeb.Ext
 
                 let relativePath = path.relative(this._sourceDirPath, fsPath);
                 relativePath = relativePath.replace(/\\/g, '/');
-    
-                sources[variant] += '@import "' + relativePath + '";\r\n';
+                if (path.extname(relativePath) === '.css')
+                    relativePath += '-abWeb';
+
+                sources[variant] += '@import "{abWeb}' + relativePath + '";\r\n';
 
                 this.console.log('    - ' + relativePath);
             }
@@ -147,6 +155,13 @@ class abWeb_Sass extends abWeb.Ext
 
     _parseSource(url, prev, done)
     {
+        if (url.indexOf('{abWeb}') === 0) {
+            url = url.substring('{abWeb}'.length);
+        }
+
+        if (path.extname(url) === '.css-abWeb')
+            url = url.substring(0, url.length - '-abWeb'.length);
+
         let urlPath = path.join(this._sourceDirPath, url);
         if (path.extname(urlPath) !== '.scss' && path.extname(urlPath) !== '.css')
             urlPath += '.scss';
@@ -250,14 +265,15 @@ class abWeb_Sass extends abWeb.Ext
                 }
 
                 let urlPaths = [];
-                nodeSass.render({
+
+                dartSass.render({
                     data: this._sources[sourceAlias],
                     file: sourcePath,
                     includePaths: [ this._sourceDirPath ],
                     importer: (url, prev, done) => {                    
                         return this._parseSource(url, prev, done);
                     },
-                    outputStyle: this.buildInfo.type('rel') ? 'compressed' : 'nested',
+                    outputStyle: this.buildInfo.type('rel') ? 'compressed' : 'expanded',
                 }, (err, result) => {
                     if (err) {
                         this.console.error('Error compiling sass.');

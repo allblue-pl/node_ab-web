@@ -4,7 +4,7 @@ module.exports.init = function(conf, data)
 {
     conf
         .extArr(data['sass']['paths'], [
-            '../dev/node_modules/spk-file-upload/scss',
+            '../dev/node_modules/spk-messages/scss',
         ])
         .extArr(data['spocky']['packages'], [
             '../dev/node_modules/spk-messages',
