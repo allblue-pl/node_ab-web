@@ -315,6 +315,7 @@ class abWeb_Sass extends abWeb.Ext
 
         if (config.addToHeader) {
             this._header.addTag('sass', 'link', {
+                id: 'ABWeb_Sass_Styles',
                 rel: "stylesheet",
                 href: this.uri(this._sourcePath, true),
                 type: "text/css"
