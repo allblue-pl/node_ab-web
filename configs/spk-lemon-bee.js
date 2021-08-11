@@ -12,5 +12,8 @@ module.exports.init = function(conf, data)
         ])
         .extArr(data['spocky']['packages'], [
             '../dev/node_modules/spk-lemon-bee',        
+        ])
+        .extArr(data['dist']['paths'], [
+            '../dev/node_modules/spk-lemon-bee/images',        
         ]);
 }
