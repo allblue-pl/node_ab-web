@@ -32,8 +32,9 @@ class abWeb_Sass extends abWeb.Ext
 
         this._variablesPaths = [];
         this._stylesPaths = [];
-
         this._variants = [];
+        this._substyles = [];
+        // this._preloads = [];
     }
 
 
@@ -69,6 +70,8 @@ class abWeb_Sass extends abWeb.Ext
                     .replace(/\\/g, '/');
 
                 relativeCss += `url(${open}${relation}${close})`;   
+
+                // this._preloads.push(relation);
             }
 
             regexIndex = match.index + match[0].length;
@@ -85,6 +88,9 @@ class abWeb_Sass extends abWeb.Ext
         };
         for (let variant of this._variants) {
             sources[variant] = '';
+        }
+        for (let substyle of this._substyles) {
+            sources[substyle] = '';
         }
 
         this.console.log('Variables:');
@@ -108,6 +114,19 @@ class abWeb_Sass extends abWeb.Ext
                 relativePath = relativePath.replace(/\\/g, '/');
 
                 sources[variant] += '@import "{abWeb}' + relativePath + '";\r\n';
+
+                this.console.log('    - ' + relativePath);
+            }
+        }
+
+        for (let substyle of this._substyles) {
+            this.console.log('Substyle: ' + substyle);
+            
+            for (let fsPath of fsPaths[`substyles.${substyle}.variables`]) {
+                let relativePath = path.relative(this._sourceDirPath, fsPath);
+                relativePath = relativePath.replace(/\\/g, '/');
+
+                sources[substyle] += '@import "{abWeb}' + relativePath + '";\r\n';
 
                 this.console.log('    - ' + relativePath);
             }
@@ -145,6 +164,24 @@ class abWeb_Sass extends abWeb.Ext
                     relativePath += '-abWeb';
 
                 sources[variant] += '@import "{abWeb}' + relativePath + '";\r\n';
+
+                this.console.log('    - ' + relativePath);
+            }
+        }
+
+        for (let substyle of this._substyles) {
+            this.console.log('Variant: ' + substyle);
+            
+            for (let fsPath of fsPaths[`substyles.${substyle}.styles`]) {
+                if (path.basename(fsPath) === 'variables.scss')
+                    continue;
+
+                let relativePath = path.relative(this._sourceDirPath, fsPath);
+                relativePath = relativePath.replace(/\\/g, '/');
+                if (path.extname(relativePath) === '.css')
+                    relativePath += '-abWeb';
+
+                sources[substyle] += '@import "{abWeb}' + relativePath + '";\r\n';
 
                 this.console.log('    - ' + relativePath);
             }
@@ -285,8 +322,35 @@ class abWeb_Sass extends abWeb.Ext
                         resolve(); return;
                     }
 
+                    // this._preloads = [];
+
                     this._createCss(result.css.toString('utf-8'), sourceAlias);
                     
+                    if (this._header.hasTagsGroup_Header('preloads'))
+                        this._header.clearTagsGroup_Header('preloads');
+                    
+                    // for (let preload of this._preloads) {
+                    //     let as = null;
+                    //     let ext = path.extname(preload).toLowerCase();
+                    //     let extRaw = ext.split('?')[0].split('#')[0];
+                    //     let preloadUri = preload.substring(0, preload.length - ext.length) +
+                    //             extRaw;
+                    //     if ([ '.jpg', '.jpeg', '.gif', '.png' ].includes(ext)) {
+                    //         as = 'image';
+                    //     } else if ([ '.eot', '.eot?#iefix', '.woff', '.woff2', '.ttf', '.svg',
+                    //             '.svg#fontawesome' ]
+                    //             .includes(ext)) {
+                    //         as = 'font';
+                    //     } else
+                    //         continue;
+
+                    //     this._header.addTag_Header('preloads', 'link', {
+                    //         rel: "preload",
+                    //         href: preloadUri,
+                    //         as: as,
+                    //     }); 
+                    // }
+
                     resolve();
                 });
             })});
@@ -314,17 +378,23 @@ class abWeb_Sass extends abWeb.Ext
             return;
 
         if (config.addToHeader) {
-            this._header.addTag('sass', 'link', {
+            this._header.addTag_Header('sass', 'link', {
                 id: 'ABWeb_Sass_Styles',
                 rel: "stylesheet",
                 href: this.uri(this._sourcePath, true),
                 type: "text/css"
+            });
+
+            this._header.addTagsGroup_Header('preloads', {
+                'after': [ 'sass' ],
             });
         }
 
         this._variablesPaths = [];
         this._stylesPaths = [];
         this._variantPaths = {};
+        this._substylePaths = {};
+        // this._preloads = [];
 
         let watchPaths = [];
         for (let fsPath of config.paths) {
@@ -350,13 +420,14 @@ class abWeb_Sass extends abWeb.Ext
             for (let fsPath of config.variants[variant]) {
                 if (path.extname(fsPath) === '.scss' || 
                         path.extname(fsPath) === '.css') {
-    
-                    variant_StylePaths.push(path.join(path.dirname(fsPath), '*.*css'));
+                    variant_StylePaths.push(fsPath);
+
+                    watchPaths.push(path.join(path.dirname(fsPath), '*.*css'));
                 } else if (path.extname(fsPath) === '') {
                     variant_VariablePaths.push(path.join(fsPath, 'variables.scss'));
                     variant_StylePaths.push(path.join(fsPath, 'styles.scss'));
     
-                    variant_StylePaths.push(path.join(fsPath, '*.*css'));
+                    watchPaths.push(path.join(fsPath, '*.*css'));
                 } else
                     this.console.error('Unknown extension type: ', fsPath);
             }
@@ -365,6 +436,33 @@ class abWeb_Sass extends abWeb.Ext
                     variant_VariablePaths);
             this.watch(`variants.${variant}.styles`, [ 'add', 'unlink', 'change' ], 
                     variant_StylePaths);
+        }
+
+        for (let substyle in config.substyles) {
+            this._substyles.push(substyle);
+
+            let substyle_VariablePaths = [];
+            let substyle_StylePaths = [];
+
+            for (let fsPath of config.substyles[substyle]) {
+                if (path.extname(fsPath) === '.scss' || 
+                        path.extname(fsPath) === '.css') {
+                    substyle_StylePaths.push(fsPath);
+
+                    watchPaths.push(path.join(path.dirname(fsPath), '*.*css'));
+                } else if (path.extname(fsPath) === '') {
+                    substyle_VariablePaths.push(path.join(fsPath, 'variables.scss'));
+                    substyle_StylePaths.push(path.join(fsPath, 'styles.scss'));
+    
+                    watchPaths.push(path.join(fsPath, '*.*css'));
+                } else
+                    this.console.error('Unknown extension type: ', fsPath);
+            }
+
+            this.watch(`substyles.${substyle}.variables`, [ 'add', 'unlink', 'change' ], 
+                    substyle_VariablePaths);
+            this.watch(`substyles.${substyle}.styles`, [ 'add', 'unlink', 'change' ], 
+                    substyle_StylePaths);
         }
 
         this.watch('scss', [ 'add', 'unlink', 'change' ], watchPaths);

@@ -30,8 +30,12 @@ class abWeb_JS extends abWeb.Ext
         this._jsPath = path.join(this.buildInfo.front, 'js');
         if (!abFS.existsDirSync(this._jsPath))
             abFS.mkdirRecursiveSync(this._jsPath);
+        this._jsPath_Tmp = path.join(this.buildInfo.tmp, 'js');
+        if (!abFS.existsDirSync(this._jsPath_Tmp))
+            abFS.mkdirRecursiveSync(this._jsPath_Tmp);
 
-        this._scriptPath = path.join(this.buildInfo.front, 'js', 'script.js');
+        this._scriptPath_Include = path.join(this.buildInfo.front, 'js', 'include.min.js');
+        this._scriptPath = path.join(this.buildInfo.tmp, 'js', 'script.js');
         this._scriptPath_Min = path.join(this.buildInfo.front, 'js', 'script.min.js');
         this._scriptPath_Map = path.join(this.buildInfo.front, 'js', 'script.min.js.map');
     }
@@ -62,7 +66,7 @@ class abWeb_JS extends abWeb.Ext
     {
         groupId = `js.${type}.${groupId}`;
 
-        this._header.addTagsGroup(groupId, props);
+        this._header.addTagsGroup_Body(groupId, props);
 
         this.getScriptsGroups(type).add(groupId, props);
     }
@@ -108,7 +112,7 @@ class abWeb_JS extends abWeb.Ext
         let types = [ 'include', 'compile' ];
         for (let type of types) {
             for (let groupId of this.getScriptsGroups(type).getGroupIds())
-                this._header.clearTagsGroup(groupId);
+                this._header.clearTagsGroup_Body(groupId);
         }
 
         if (this.buildInfo.type('rel')) {
@@ -136,10 +140,14 @@ class abWeb_JS extends abWeb.Ext
             /* script.js */
             // fs.writeFileSync(this._scriptPath + '.debug', js.include);
 
-            let js_Include_Result = uglifyJS.minify(js.include);
-            if (typeof js_Include_Result.error !== 'undefined') {
-                // console.log('Test', js_Include_Result);
-                this.console.error(js_Include_Result.error);
+            let js_Include_Result = null;
+            if (js.include !== null) {
+                js_Include_Result = uglifyJS.minify(js.include);
+                if (typeof js_Include_Result.error !== 'undefined') {
+                    // console.log('Test', js_Include_Result);
+                    this.console.error(js_Include_Result.error);
+                    js_Include_Result = null;
+                }
             }
 
             try {
@@ -148,9 +156,8 @@ class abWeb_JS extends abWeb.Ext
                         useBuiltIns: 'entry',
                         corejs: 3,
                     }], ],
-                    // plugins: [ require('@babel/plugin-tranform-runtime'), ],
-                    // inputSourceMap: this._scriptPath,
-                    // sourceMaps: true,
+                    filename: 'script.js',
+                    sourceMaps: true,
                     minified: true,
                 });
 
@@ -159,32 +166,50 @@ class abWeb_JS extends abWeb.Ext
                 let modulePaths_RegeneratorRuntime = path.dirname(require.resolve('regenerator-runtime'));
                 // __dirname + '/../../node_modules/regenerator-runtime
 
-                fs.writeFileSync(this._scriptPath_Min, 
-                        js_Include_Result.code + "\r\n" +
-                        fs.readFileSync(modulePaths_CoreJSBundle + '/minified.js') + "\r\n" +
-                        fs.readFileSync(modulePaths_RegeneratorRuntime + '/runtime.js') + "\r\n" +
-                        script.code); 
+                let js_Include_Code = js_Include_Result === null ? 
+                        '' : js_Include_Result.code;
+                fs.writeFileSync(this._scriptPath_Include, 
+                    js_Include_Code + "\r\n" +
+                    fs.readFileSync(modulePaths_CoreJSBundle + '/minified.js') + "\r\n" +
+                    fs.readFileSync(modulePaths_RegeneratorRuntime + '/runtime.js') + "\r\n");
+
+
+                fs.writeFileSync(this._scriptPath, js.compile);
+                fs.writeFileSync(this._scriptPath_Min, script.code + "\r\n\r\n" +
+                        "//# sourceMappingURL=./script.min.js.map");
+                fs.writeFileSync(this._scriptPath_Map, JSON.stringify(script.map));
                 // +
                         // '\r\n\r\n//# sourceMappingURL=script.min.js.map');
                 // fs.writeFileSync(this._scriptPath_Map, JSON.stringify(script.map));
 
-                if (this._header.hasTagsGroup('js.min'))
-                    this._header.clearTagsGroup('js.min');
+                if (this._header.hasTagsGroup_Body('js.min'))
+                    this._header.clearTagsGroup_Body('js.min');
                 else
-                    this._header.addTagsGroup('js.min');
+                    this._header.addTagsGroup_Body('js.min');
 
-                this._header.addTag('js.min', 'script', {
+                this._header.addTag_Body('js.min', 'script', {
+                    src: this.uri(this._scriptPath_Include),
+                    // type: 'text/javascript',
+                }, '');
+
+                this._header.addTag_Body('js.min', 'script', {
                     src: this.uri(this._scriptPath_Min),
-                    type: 'text/javascript',
+                    // type: 'text/javascript',
                 }, '');
 
                 this._header.build();
 
                 this.console.success('Finished.');
             } catch (err) {
-                this._header.addTag('js.min', 'script', {
+                this._header.addTag_Body('js.min', 'script', {
+                    src: this.uri(this._scriptPath_Include),
+                    // type: 'text/javascript',
+                }, '');
+
+
+                this._header.addTag_Body('js.min', 'script', {
                     src: this.uri(this._scriptPath_Min),
-                    type: 'text/javascript',
+                    // type: 'text/javascript',
                 }, '');
 
                 this.console.error(err.stack);
@@ -203,9 +228,9 @@ class abWeb_JS extends abWeb.Ext
                         let uri = this.buildInfo.base + relPath + '?v=' +
                                 this.buildInfo.hash;
 
-                        this._header.addTag(groupId, 'script', {
+                        this._header.addTag_Body(groupId, 'script', {
                             src: uri,
-                            type: 'text/javascript',
+                            // type: 'text/javascript',
                         }, '');
             
                         this.console.log('    - ' + relPath);

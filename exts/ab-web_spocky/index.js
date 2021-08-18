@@ -30,7 +30,7 @@ class abWeb_Spocky extends abWeb.Ext
         this._packagePaths = [];
         this._packages = {};
 
-        this._header.addTagsGroup('spocky', {
+        this._header.addTagsGroup_Body('spocky', {
             
         });
     }
@@ -141,7 +141,7 @@ class abWeb_Spocky extends abWeb.Ext
 
         return Promise.all(buildPromises)
             .then(() => {
-                this._header.clearTagsGroup('spocky');
+                this._header.clearTagsGroup_Body('spocky');
 
                 // this._header.addTag('spocky', 'script', {
                 //     src: this.uri(path.join(this._modulePath, 'js/spocky.js')),

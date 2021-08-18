@@ -2,8 +2,6 @@
 
 module.exports.init = function(conf, data) 
 {
-    conf.init('jquery');
-
     conf.extArr(data['sass']['paths'], [
         '../dev/node_modules/ab-bootstrap/scss',
     ]);
