@@ -8,5 +8,8 @@ module.exports.init = function(conf, data)
         ])
         .extArr(data['spocky']['packages'], [
             '../dev/node_modules/spk-file-upload',
+        ])
+        .extArr(data['dist'].paths, [
+            '../dev/node_modules/spk-file-upload/images/**',
         ]);   
 }
