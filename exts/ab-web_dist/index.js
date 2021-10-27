@@ -62,9 +62,10 @@ class abWeb_Dist extends abWeb.Ext
         if ('path' in config)
             this._path = config.path;
 
-        let distPath = path.join(this.buildInfo.index, 'dist');
-        if (fs.existsSync(distPath))
-            abFS.removeSync(distPath);
+        /* Shouldn't be deleted in case of 2 different builds without overlaping resources. */
+        // let distPath = path.join(this.buildInfo.index, 'dist');
+        // if (fs.existsSync(distPath))
+        //     abFS.removeSync(distPath);
     }
     /* / abWeb.Ext Overrides */
 

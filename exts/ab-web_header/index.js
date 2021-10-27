@@ -21,6 +21,7 @@ class abWeb_Header extends abWeb.Ext
         this._exportHash = [];
         this._body_FilePath = path.join(this.buildInfo.back, 'postBodyInit.html');
         this._header_FilePath = path.join(this.buildInfo.back, 'header.html');
+        this._script_FilePath = path.join(this.buildInfo.back, 'header.js');
         this._header_TagsGroups = new abWeb.Groups(this);
         this._body_TagsGroups = new abWeb.Groups(this);
     }
@@ -100,9 +101,14 @@ class abWeb_Header extends abWeb.Ext
     {
         var html = '';
 
-        if (this._exportHash.includes('js')) {
-            html += '<script>var ABWeb_Hash = "' + 
-                    this.buildInfo.hash + '";</script>';
+        if (!this.buildInfo.type('rel')) {
+            if (this._exportHash.includes('js')) {
+                let scriptRelPath = path.relative(this.buildInfo.index, this._script_FilePath)
+                        .replace(/\\/g, '/');
+                let scriptUri = this.buildInfo.base + scriptRelPath + '?v=' +
+                        this.buildInfo.hash;
+                html += `<script src="${scriptUri}"></script>`;
+            }
         }
 
         if (this._exportHash.includes('php')) {
@@ -149,6 +155,9 @@ class abWeb_Header extends abWeb.Ext
             if (!abFS.existsDirSync(path.dirname(this._header_FilePath)))
                 abFS.mkdirRecursiveSync(path.dirname(this._header_FilePath));
 
+            if (!abFS.existsDirSync(path.dirname(this._script_FilePath)))
+                abFS.mkdirRecursiveSync(path.dirname(this._script_FilePath));
+
             fs.writeFile(this._body_FilePath, this.getHtml_Body(), (err) => {
                 if (err !== null) {
                     reject(err);
@@ -161,9 +170,25 @@ class abWeb_Header extends abWeb.Ext
                         return;
                     }
 
-                    self.console.success('Finished.');
-                    resolve();
-                    return;
+                    if (this.buildInfo.type('rel')) {
+                        self.console.success('Finished.');
+                        resolve();
+                        return;
+                    } else {
+                        let script = '';
+                        if (this._exportHash.includes('js'))
+                            script += 'var ABWeb_Hash = "' + this.buildInfo.hash + '";';
+                        fs.writeFile(this._script_FilePath, script, (err) => {
+                            if (err !== null) {
+                                reject(err);
+                                return;
+                            }
+
+                            self.console.success('Finished.');
+                            resolve();
+                            return;
+                        });
+                    }
                 });
             });
         });
@@ -186,12 +211,26 @@ class abWeb_Header extends abWeb.Ext
                 }
 
                 fs.unlink(self._header_FilePath, (err, stat) => {
-                    if (err === null)
-                        resolve();
-                    else if (err.code === 'ENOENT')
-                        resolve();
-                    else
+                    let success = false;
+                    if (err === null) {
+                        success = true;
+                    } else if (err.code === 'ENOENT') {
+                        success = true;
+                    }
+                    
+                    if (!success) {
                         reject(err);
+                        return;
+                    }
+
+                    fs.unlink(self._script_FilePath, (err, stat) => {
+                        if (err === null)
+                            resolve();
+                        else if (err.code === 'ENOENT')
+                            resolve();
+                        else
+                            reject(err);
+                    });
                 });
             });
         });

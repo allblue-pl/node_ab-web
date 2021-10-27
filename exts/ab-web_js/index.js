@@ -117,7 +117,7 @@ class abWeb_JS extends abWeb.Ext
 
         if (this.buildInfo.type('rel')) {
             let js = {
-                include: '',
+                include: `var ABWeb_Hash = '${this.buildInfo.hash}';\r\n`,
                 compile: '',
             };
             for (let type of types) {
@@ -140,14 +140,11 @@ class abWeb_JS extends abWeb.Ext
             /* script.js */
             // fs.writeFileSync(this._scriptPath + '.debug', js.include);
 
-            let js_Include_Result = null;
-            if (js.include !== null) {
-                js_Include_Result = uglifyJS.minify(js.include);
-                if (typeof js_Include_Result.error !== 'undefined') {
-                    // console.log('Test', js_Include_Result);
-                    this.console.error(js_Include_Result.error);
-                    js_Include_Result = null;
-                }
+            let js_Include_Result = uglifyJS.minify(js.include);
+            if (typeof js_Include_Result.error !== 'undefined') {
+                // console.log('Test', js_Include_Result);
+                this.console.error(js_Include_Result.error);
+                js_Include_Result = null;
             }
 
             try {
