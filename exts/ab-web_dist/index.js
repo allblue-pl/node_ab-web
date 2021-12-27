@@ -15,7 +15,7 @@ class abWeb_Dist extends abWeb.Ext
 
     constructor(abWeb, extPath)
     { super(abWeb, extPath);
-        this._path = 'dist';
+        this._path = this.buildInfo.dist;
     }
 
 
@@ -30,7 +30,7 @@ class abWeb_Dist extends abWeb.Ext
         for (let fsPath of fsPaths.files) {
             let fileRelPath = path.relative(path.join('..', 'dev'), 
                     fsPath);
-            let distPath = path.join(this.buildInfo.index, this._path, fileRelPath);
+            let distPath = path.join(this._path, fileRelPath);
 
             let distDirPath = path.dirname(distPath);
             if (!fs.existsSync(distDirPath))
@@ -59,9 +59,6 @@ class abWeb_Dist extends abWeb.Ext
 
     __parse_Pre(config)
     {
-        if ('path' in config)
-            this._path = config.path;
-
         /* Shouldn't be deleted in case of 2 different builds without overlaping resources. */
         // let distPath = path.join(this.buildInfo.index, 'dist');
         // if (fs.existsSync(distPath))

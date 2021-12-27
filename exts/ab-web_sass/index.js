@@ -35,12 +35,17 @@ class abWeb_Sass extends abWeb.Ext
         this._variants = [];
         this._substyles = [];
         // this._preloads = [];
+
+        this._devPath = path.relative(this.cssDir, this.buildInfo.dev)
+                .replace(/\\/g, '/', '/');
+        this._distPath = path.relative(this.cssDir, this.buildInfo.dist)
+                .replace(/\\/g, '/', '/');
     }
 
 
     _createCss(css, sourceAlias)
     {
-        let cssPath = path.join(this.cssDir, sourceAlias === '_default' ? 
+        let cssPath = path.join(this.cssDir, sourceAlias === '_default' ?
                 'sass.css' : `sass-${sourceAlias}.css`);
 
         let relativeCss = '';
@@ -66,8 +71,16 @@ class abWeb_Sass extends abWeb.Ext
             if (match[4].match(/^(((https?:)?\/\/)|(data:))/)) {
                 relativeCss += `url(${open}${match[4]}${close})`;                    
             } else {
-                let relation = path.join(match[3], match[4])
-                    .replace(/\\/g, '/');
+                let relPath = match[3];
+                if (this.buildInfo.type('rel')) {
+                    if (match[3].indexOf(this._devPath) === 0) {
+                        relPath = this._distPath + 
+                                match[3].substring(this._devPath.length);
+                    }
+                }
+
+                let relation = path.join(relPath, match[4])
+                        .replace(/\\/g, '/');
 
                 relativeCss += `url(${open}${relation}${close})`;   
 
@@ -245,9 +258,8 @@ class abWeb_Sass extends abWeb.Ext
                     continue;
 
                 relativeSass += sass.substring(regexIndex, match.index);
-                let relation = path.relative(this._sourceDirPath, 
-                            path.dirname(urlPath))
-                        .replace(/\\/g, '/');
+                let relation = path.relative(this.cssDir, 
+                        path.dirname(urlPath)).replace(/\\/g, '/');
 
                 relativeSass += `url(${open}{${relation}}${match[2]}${close})`;
 
@@ -259,28 +271,28 @@ class abWeb_Sass extends abWeb.Ext
         });
     }
 
-    _replaceRelativeUrls_ParseUrlPath(urlPaths, url, prev)
-    {
-        let prevPath = null;
+    // _replaceRelativeUrls_ParseUrlPath(urlPaths, url, prev)
+    // {
+    //     let prevPath = null;
 
-        for (let i = urlPaths.length - 1; i >= 0; i--) {
-            if (urlPaths[i].url === prev) {
-                prevPath = urlPaths[i].path;
-                break;
-            }
-        }
-        if (prevPath === null)
-            prevPath = path.resolve(prev);
+    //     for (let i = urlPaths.length - 1; i >= 0; i--) {
+    //         if (urlPaths[i].url === prev) {
+    //             prevPath = urlPaths[i].path;
+    //             break;
+    //         }
+    //     }
+    //     if (prevPath === null)
+    //         prevPath = path.resolve(prev);
 
-        let urlPath = path.join(path.dirname(prevPath), url);
+    //     let urlPath = path.join(path.dirname(prevPath), url);
 
-        urlPaths.push({
-            url: url,
-            path: urlPath,
-        });
+    //     urlPaths.push({
+    //         url: url,
+    //         path: urlPath,
+    //     });
 
-        return urlPath;
-    }
+    //     return urlPath;
+    // }
 
 
     /* abWeb.Ext Overrides */
