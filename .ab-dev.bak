@@ -3,7 +3,6 @@
         "ab-fs" : "https://github.com/allblue-pl/node_ab-fs",
         "ab-fs-matcher": "https://github.com/allblue-pl/node_ab-fs-matcher",
         "ab-fs-watcher": "https://github.com/allblue-pl/node_ab-fs-watcher",
-		"ab-log": "https://github.com/allblue-pl/node_ab-log",
         "ab-tasks": "https://github.com/allblue-pl/js_ab-tasks",
         "ab-xml-parser": "https://github.com/allblue-pl/node_ab-xml-parser",
         "js0": "https://github.com/allblue-pl/js_js0",

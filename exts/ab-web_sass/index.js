@@ -233,7 +233,7 @@ class abWeb_Sass extends abWeb.Ext
                 done({ contents: '' });
                 return;
             }
-
+     
             let sass = data.toString();
 
             sass = sass.replace(/@import\s*([\'"])\s*/g, '@import $1' + 
@@ -258,10 +258,13 @@ class abWeb_Sass extends abWeb.Ext
                     continue;
 
                 relativeSass += sass.substring(regexIndex, match.index);
-                let relation = path.relative(this.cssDir, 
-                        path.dirname(urlPath)).replace(/\\/g, '/');
+                // let relation = path.relative(this.cssDir, 
+                //         path.dirname(urlPath)).replace(/\\/g, '/');
 
-                relativeSass += `url(${open}{${relation}}${match[2]}${close})`;
+                let relation = path.relative(this.cssDir, path.join(path.dirname(urlPath), 
+                        match[2])).replace(/\\/g, '/');
+
+                relativeSass += `url(${open}{${relation}}${close})`;
 
                 regexIndex = match.index + match[0].length;
             }
