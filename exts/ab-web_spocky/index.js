@@ -125,7 +125,7 @@ class abWeb_Spocky extends abWeb.Ext
                     LayoutBuilder.Build(this, layoutPath, packagePath);
                 } catch (err) {
                     this.console.error(`Cannot parse '${layoutPath}':`);
-                    this.console.warn(err);
+                    this.console.warn(err.stack);
                     return;
                 }
 
