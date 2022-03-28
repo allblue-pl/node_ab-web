@@ -40,6 +40,8 @@ class abWeb_Sass extends abWeb.Ext
                 .replace(/\\/g, '/', '/');
         this._distPath = path.relative(this.cssDir, this.buildInfo.dist)
                 .replace(/\\/g, '/', '/');
+        
+        this._remapPaths = [];
     }
 
 
@@ -76,6 +78,13 @@ class abWeb_Sass extends abWeb.Ext
                     if (match[3].indexOf(this._devPath) === 0) {
                         relPath = this._distPath + 
                                 match[3].substring(this._devPath.length);
+                    }
+
+                    for (let remapPath of this._remapPaths) {
+                        if (match[3].indexOf(remapPath[0]) === 0) {
+                            relPath = remapPath[1] + match[3].substring(
+                                    remapPath[0].length);
+                        }
                     }
                 }
 
@@ -391,6 +400,15 @@ class abWeb_Sass extends abWeb.Ext
     {
         if (!('paths' in config))
             return;
+
+        for (let remap of config.remaps) {
+            this._remapPaths.push([
+                path.relative(this.cssDir, remap[0])
+                        .replace(/\\/g, '/', '/'),
+                path.relative(this.cssDir, remap[1])
+                        .replace(/\\/g, '/', '/')
+            ]);
+        }
 
         if (config.addToHeader) {
             this._header.addTag_Header('sass', 'link', {

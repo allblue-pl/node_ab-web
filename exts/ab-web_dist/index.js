@@ -30,7 +30,7 @@ class abWeb_Dist extends abWeb.Ext
         for (let fsPath of fsPaths.files) {
             let fileRelPath = path.relative(path.join('..', 'dev'), 
                     fsPath);
-            let distPath = path.join(this._path, fileRelPath);
+            let distPath = path.join(this.buildInfo.dist, fileRelPath);
 
             let distDirPath = path.dirname(distPath);
             if (!fs.existsSync(distDirPath))
@@ -43,8 +43,8 @@ class abWeb_Dist extends abWeb.Ext
 
     __parse(config)
     {
-        if ('path' in config)
-            this._path = config.path;
+        // if ('path' in config)
+        //     this._path = config.path;
 
         if (!this.buildInfo.type('rel'))
             return;
