@@ -80,7 +80,7 @@ class abWeb_Header extends abWeb.Ext
         return this._header_TagsGroups.has(groupId);
     }
 
-    getHtml_PostBody()
+    getHtml_PostBodyInit()
     {
         var html = '';
 
@@ -158,7 +158,7 @@ class abWeb_Header extends abWeb.Ext
             if (!abFS.existsDirSync(path.dirname(this._script_FilePath)))
                 abFS.mkdirRecursiveSync(path.dirname(this._script_FilePath));
 
-            fs.writeFile(this._body_FilePath, this.getHtml_PostBody(), (err) => {
+            fs.writeFile(this._body_FilePath, this.getHtml_PostBodyInit(), (err) => {
                 if (err !== null) {
                     reject(err);
                     return;

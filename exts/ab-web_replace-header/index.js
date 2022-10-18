@@ -48,7 +48,7 @@ class abWeb_Replace extends abWeb.Ext
                     content = content.toString();
                     content = content.replace(/{{base}}/g, this.buildInfo.base);
                     content = content.replace(/{{header}}/g, this._header.getHtml_Header());
-                    content = content.replace(/{{postBody}}/g, this._header.getHtml_PostBody());
+                    content = content.replace(/{{postBodyInit}}/g, this._header.getHtml_PostBodyInit());
 
                     let newFile = path.resolve(newFileName);
                     fs.writeFile(newFile, content, (err) => {
@@ -56,6 +56,8 @@ class abWeb_Replace extends abWeb.Ext
                             reject(err);
                             return;
                         }
+
+                        this.console.log('Replaced: ' + file + ' -> ' + newFile);
 
                         resolve();
                     });
