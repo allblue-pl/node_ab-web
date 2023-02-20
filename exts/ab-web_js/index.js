@@ -229,6 +229,7 @@ class abWeb_JS extends abWeb.Ext
                             src: uri,
                             // type: 'text/javascript',
                         }, '');
+                        this._header.addScriptUri(uri);
             
                         this.console.log('    - ' + relPath);
                     }

@@ -18,12 +18,21 @@ class abWeb_Header extends abWeb.Ext
 
     constructor(ab_web, ext_path)
     { super(ab_web, ext_path);
-        this._exportHash = [];
+        this._script_FilePath = path.join(this.buildInfo.back, 'header.js');
         this._body_FilePath = path.join(this.buildInfo.back, 'postBodyInit.html');
         this._header_FilePath = path.join(this.buildInfo.back, 'header.html');
-        this._script_FilePath = path.join(this.buildInfo.back, 'header.js');
+        this._header_JSON = path.join(this.buildInfo.back, 'header.json');
+
+        this._exportHash = [];
+        this._scriptUris = [];
+
         this._header_TagsGroups = new abWeb.Groups(this);
         this._body_TagsGroups = new abWeb.Groups(this);
+    }
+
+    addScriptUri(scriptUri)
+    {
+        this._scriptUris.push(scriptUri);
     }
 
     addTag_Body(groupId, ...args)
@@ -158,39 +167,49 @@ class abWeb_Header extends abWeb.Ext
             if (!abFS.existsDirSync(path.dirname(this._script_FilePath)))
                 abFS.mkdirRecursiveSync(path.dirname(this._script_FilePath));
 
-            fs.writeFile(this._body_FilePath, this.getHtml_PostBodyInit(), (err) => {
-                if (err !== null) {
-                    reject(err);
-                    return;
+            try {
+                fs.writeFileSync(this._body_FilePath, this.getHtml_PostBodyInit());
+            } catch (err) {
+                reject(err);
+                return;
+            }
+
+            try {
+                fs.writeFileSync(this._header_FilePath, this.getHtml_Header());
+            } catch (err) {
+                reject(err);
+                return;
+            }
+
+            try {
+                let json = {
+                    scriptUris: this._scriptUris,
+                };
+
+                fs.writeFileSync(this._header_JSON, JSON.stringify(json));
+            } catch (err) {
+                reject(err);
+                return;
+            }
+
+            if (this.buildInfo.type('rel')) {
+                self.console.success('Finished.');
+                resolve();
+                return;
+            } else {
+                let script = '';
+                if (this._exportHash.includes('js'))
+                    script += 'var ABWeb_Hash = "' + this.buildInfo.hash + '";';
+                try {
+                    fs.writeFileSync(this._script_FilePath, script);
+                } catch (err) {
+
                 }
-
-                fs.writeFile(this._header_FilePath, this.getHtml_Header(), (err) => {
-                    if (err !== null) {
-                        reject(err);
-                        return;
-                    }
-
-                    if (this.buildInfo.type('rel')) {
-                        self.console.success('Finished.');
-                        resolve();
-                        return;
-                    } else {
-                        let script = '';
-                        if (this._exportHash.includes('js'))
-                            script += 'var ABWeb_Hash = "' + this.buildInfo.hash + '";';
-                        fs.writeFile(this._script_FilePath, script, (err) => {
-                            if (err !== null) {
-                                reject(err);
-                                return;
-                            }
-
-                            self.console.success('Finished.');
-                            resolve();
-                            return;
-                        });
-                    }
-                });
-            });
+                
+                self.console.success('Finished.');
+                resolve();
+                return;
+            }
         });
     }
 
