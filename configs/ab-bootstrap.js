@@ -8,6 +8,6 @@ module.exports.init = function(conf, data)
 
     conf.extArr(data['js']['include'], [
         '../dev/node_modules/bootstrap/dist/js/bootstrap.bundle.min.js',
-        '../dev/node_modules/popper.js/dist/umd/popper.js',
+        '../dev/node_modules/@popperjs/core/dist/umd/popper.js',
     ]);
 }
