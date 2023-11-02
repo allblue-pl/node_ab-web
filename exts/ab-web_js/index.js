@@ -66,7 +66,7 @@ class abWeb_JS extends abWeb.Ext
     {
         groupId = `js.${type}.${groupId}`;
 
-        this._header.addTagsGroup_Body(groupId, props);
+        this._header.addTagsGroup_PostBody(groupId, props);
 
         this.getScriptsGroups(type).add(groupId, props);
     }
@@ -112,7 +112,7 @@ class abWeb_JS extends abWeb.Ext
         let types = [ 'include', 'compile' ];
         for (let type of types) {
             for (let groupId of this.getScriptsGroups(type).getGroupIds())
-                this._header.clearTagsGroup_Body(groupId);
+                this._header.clearTagsGroup_PostBody(groupId);
         }
 
         if (this.buildInfo.type('rel')) {
@@ -179,35 +179,39 @@ class abWeb_JS extends abWeb.Ext
                         // '\r\n\r\n//# sourceMappingURL=script.min.js.map');
                 // fs.writeFileSync(this._scriptPath_Map, JSON.stringify(script.map));
 
-                if (this._header.hasTagsGroup_Body('js.min'))
-                    this._header.clearTagsGroup_Body('js.min');
+                if (this._header.hasTagsGroup_PostBody('js.min'))
+                    this._header.clearTagsGroup_PostBody('js.min');
                 else
-                    this._header.addTagsGroup_Body('js.min');
+                    this._header.addTagsGroup_PostBody('js.min');
 
-                this._header.addTag_Body('js.min', 'script', {
+                this._header.addTag_PostBody('js.min', 'script', {
                     src: this.uri(this._scriptPath_Include),
                     // type: 'text/javascript',
                 }, '');
+                this._header.addScriptUri_PostBody(
+                        this.uri(this._scriptPath_Include));
 
-                this._header.addTag_Body('js.min', 'script', {
+                this._header.addTag_PostBody('js.min', 'script', {
                     src: this.uri(this._scriptPath_Min),
                     // type: 'text/javascript',
                 }, '');
+                this._header.addScriptUri_PostBody(
+                        this.uri(this._scriptPath_Min));
 
                 this._header.build();
 
                 this.console.success('Finished.');
             } catch (err) {
-                this._header.addTag_Body('js.min', 'script', {
-                    src: this.uri(this._scriptPath_Include),
-                    // type: 'text/javascript',
-                }, '');
+                // this._header.addTag_Body('js.min', 'script', {
+                //     src: this.uri(this._scriptPath_Include),
+                //     // type: 'text/javascript',
+                // }, '');
 
 
-                this._header.addTag_Body('js.min', 'script', {
-                    src: this.uri(this._scriptPath_Min),
-                    // type: 'text/javascript',
-                }, '');
+                // this._header.addTag_Body('js.min', 'script', {
+                //     src: this.uri(this._scriptPath_Min),
+                //     // type: 'text/javascript',
+                // }, '');
 
                 this.console.error(err.stack);
             }
@@ -225,11 +229,11 @@ class abWeb_JS extends abWeb.Ext
                         let uri = this.buildInfo.base + relPath + '?v=' +
                                 this.buildInfo.hash;
 
-                        this._header.addTag_Body(groupId, 'script', {
+                        this._header.addTag_PostBody(groupId, 'script', {
                             src: uri,
                             // type: 'text/javascript',
                         }, '');
-                        this._header.addScriptUri(uri);
+                        this._header.addScriptUri_PostBody(uri);
             
                         this.console.log('    - ' + relPath);
                     }
