@@ -21,30 +21,46 @@ class abWeb_Header extends abWeb.Ext
         this._script_FilePath = path.join(this.buildInfo.back, 'header.js');
         
         this._postBody_FilePath = path.join(this.buildInfo.back, 'postBody.html');
-        this._postBody_JSON = path.join(this.buildInfo.back, 'postBody.json');
-        this._postBody_ScriptUris = [];
+        this._postBody_Scripts_FilePath = path.join(this.buildInfo.back, 'postBody_Scripts.html');
+        this._postBody_Scripts_JSON = path.join(this.buildInfo.back, 'postBody.json');
+        this._postBody_ScriptUrisGroups = new abWeb.Groups(this);
         this._postBody_TagsGroups = new abWeb.Groups(this);
 
         this._header_FilePath = path.join(this.buildInfo.back, 'header.html');
-        this._header_JSON = path.join(this.buildInfo.back, 'header.json');
-        this._header_ScriptUris = [];
+        this._header_Scripts_FilePath = path.join(this.buildInfo.back, 'header_Scripts.html');
+        this._header_Scripts_JSON = path.join(this.buildInfo.back, 'header.json');
+        this._header_ScriptUrisGroups = new abWeb.Groups(this);
         this._header_TagsGroups = new abWeb.Groups(this);
 
         this._exportHash = [];
     }
 
-    addScriptUri_Header(scriptUri)
+    addScriptUri_Header(groupId, scriptUri)
     {
-        this._header_ScriptUris.push(scriptUri);
+        js0.args(arguments, 'string', 'string');
+
+        if (!this._header_ScriptUrisGroups.has(groupId))
+            this.addScriptUrisGroup_PostBody(groupId);
+
+        this._header_ScriptUrisGroups.addValue(groupId, scriptUri);
+        this.build();
     }
 
-    addScriptUri_PostBody(scriptUri)
+    addScriptUri_PostBody(groupId, scriptUri)
     {
-        this._postBody_ScriptUris.push(scriptUri);
+        js0.args(arguments, 'string', 'string');
+
+        if (!this._postBody_ScriptUrisGroups.has(groupId))
+            this.addScriptUrisGroup_PostBody(groupId);
+
+        this._postBody_ScriptUrisGroups.addValue(groupId, scriptUri);
+        this.build();
     }
 
     addTag_PostBody(groupId, ...args)
     {
+        js0.args(arguments, 'string', js0.ExtraArgs);
+
         if (!this._postBody_TagsGroups.has(groupId))
             this.addTagsGroup_PostBody(groupId);
 
@@ -56,6 +72,8 @@ class abWeb_Header extends abWeb.Ext
 
     addTag_Header(groupId, ...args)
     {
+        js0.args(arguments, 'string', js0.ExtraArgs);
+
         if (!this._header_TagsGroups.has(groupId))
             this.addTagsGroup_Header(groupId);
 
@@ -65,39 +83,95 @@ class abWeb_Header extends abWeb.Ext
         this.build();
     }
 
-    addTagsGroup_PostBody(groupId, props = {})
+    addScriptUrisGroup_Header(groupId, props = {})
     {
-        this._postBody_TagsGroups.add(groupId, props);
+        js0.args(arguments, 'string', [ js0.RawObject, js0.Default ]);
+
+        this._header_ScriptUrisGroups.add(groupId, props);
+    }
+
+    addScriptUrisGroup_PostBody(groupId, props = {})
+    {
+        js0.args(arguments, 'string', [ js0.RawObject, js0.Default ]);
+
+        this._postBody_ScriptUrisGroups.add(groupId, props);
     }
 
     addTagsGroup_Header(groupId, props = {})
     {
+        js0.args(arguments, 'string', [ js0.RawObject, js0.Default ]);
+
         this._header_TagsGroups.add(groupId, props);
+    }
+
+    addTagsGroup_PostBody(groupId, props = {})
+    {
+        js0.args(arguments, 'string', [ js0.RawObject, js0.Default ]);
+
+        this._postBody_TagsGroups.add(groupId, props);
+    }
+
+    clearScriptUrisGroup_Header(groupId)
+    {
+        js0.args(arguments, 'string');
+
+        this._header_ScriptUrisGroups.clear(groupId);
+        this.build();
+    }
+
+    clearScriptUrisGroup_PostBody(groupId)
+    {
+        js0.args(arguments, 'string');
+
+        this._postBody_ScriptUrisGroups.clear(groupId);
+        this.build();
     }
 
     clearTagsGroup_PostBody(groupId)
     {
+        js0.args(arguments, 'string');
+
         this._postBody_TagsGroups.clear(groupId);
         this.build();
     }
 
     clearTagsGroup_Header(groupId)
     {
+        js0.args(arguments, 'string');
+
         this._header_TagsGroups.clear(groupId);
         this.build();
     }
 
+    hasScriptUrisGroup_Header(groupId)
+    {
+        js0.args(arguments, 'string');
+
+        return this._header_ScriptUrisGroups.has(groupId);
+    }
+
+    hasScriptUrisGroup_PostBody(groupId)
+    {
+        js0.args(arguments, 'string');
+
+        return this._postBody_ScriptUrisGroups.has(groupId);
+    }
+
     hasTagsGroup_PostBody(groupId)
     {
+        js0.args(arguments, 'string');
+
         return this._postBody_TagsGroups.has(groupId);
     }
 
     hasTagsGroup_Header(groupId)
     {
+        js0.args(arguments, 'string');
+
         return this._header_TagsGroups.has(groupId);
     }
 
-    getHtml_PostBodyInit()
+    getHtml_PostBody()
     {
         var html = '';
 
@@ -109,6 +183,23 @@ class abWeb_Header extends abWeb.Ext
             html += `<!-- ${tagsGroupId} -->\r\n`;
             for (let tag of tagsGroup)
                 html += tag.html + '\r\n';
+        }
+
+        return html;
+    }
+
+    getHtml_PostBody_Scripts()
+    {
+        var html = '';
+
+        /* Sort */
+        let groups = this._postBody_ScriptUrisGroups.getValues();
+
+        /* Html */
+        for (let [ groupId, group ] of groups) {            
+            html += `<!-- ${groupId} -->\r\n`;
+            for (let scriptUri of group)
+                html += `<script src="${scriptUri}"></script>\r\n`;
         }
 
         return html;
@@ -140,6 +231,23 @@ class abWeb_Header extends abWeb.Ext
             html += `<!-- ${tagsGroupId} -->\r\n`;
             for (let tag of tagsGroup)
                 html += tag.html + '\r\n';
+        }
+
+        return html;
+    }
+
+    getHtml_Header_Scripts()
+    {
+        var html = '';
+
+        /* Sort */
+        let groups = this._header_ScriptUrisGroups.getValues();
+
+        /* Html */
+        for (let [ groupId, group ] of groups) {            
+            html += `<!-- ${groupId} -->\r\n`;
+            for (let scriptUri of group)
+                html += `<script src="${scriptUri}"></script>\r\n`;
         }
 
         return html;
@@ -177,18 +285,22 @@ class abWeb_Header extends abWeb.Ext
 
             try {
                 fs.writeFileSync(this._header_FilePath, this.getHtml_Header());
+                fs.writeFileSync(this._header_Scripts_FilePath, 
+                        this.getHtml_Header_Scripts());
                 let json_Header = {
-                    scriptUris: this._header_ScriptUris,
+                    scriptUris: this._header_ScriptUrisGroups.getValues_AsArray(),
                 };
-                fs.writeFileSync(this._header_JSON, 
+                fs.writeFileSync(this._header_Scripts_JSON, 
                         JSON.stringify(json_Header));
 
                 fs.writeFileSync(this._postBody_FilePath, 
-                        this.getHtml_PostBodyInit());
+                        this.getHtml_PostBody());
+                fs.writeFileSync(this._postBody_Scripts_FilePath, 
+                        this.getHtml_PostBody_Scripts());
                 let json_PostBody = {
-                    scriptUris: this._postBody_ScriptUris,
+                    scriptUris: this._postBody_ScriptUrisGroups.getValues_AsArray(),
                 };
-                fs.writeFileSync(this._postBody_JSON, 
+                fs.writeFileSync(this._postBody_Scripts_JSON, 
                         JSON.stringify(json_PostBody));
             } catch (err) {
                 reject(err);
