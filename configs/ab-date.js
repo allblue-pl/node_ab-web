@@ -10,4 +10,7 @@ module.exports.init = function(conf, data)
     conf.extendObject(data['js-libs'].libs, {
         'moment': '../dev/node_modules/ab-date/moment/js-lib',
     });
+    conf.extendObject(data['js-libs'].libs, {
+        'moment-timezone': '../dev/node_modules/ab-date/moment-timezone/js-lib',
+    });
 }
