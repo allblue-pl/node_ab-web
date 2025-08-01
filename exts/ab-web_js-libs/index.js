@@ -7,8 +7,7 @@ const abWeb = require('../../.');
 const jsLibs = require('js-libs');
 
 
-class abWeb_JSLibs extends abWeb.Ext
-{
+class abWeb_JSLibs extends abWeb.Ext {
 
     constructor(ab_web, ext_path)
     { super(ab_web, ext_path);

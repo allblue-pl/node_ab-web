@@ -12,8 +12,7 @@ const uglifyJS = require('uglify-js');
 // const abFS = require('ab-fs');
 
 
-class abWeb_JS extends abWeb.Ext
-{
+class abWeb_JS extends abWeb.Ext {
 
     constructor(ab_web, ext_path)
     { super(ab_web, ext_path);

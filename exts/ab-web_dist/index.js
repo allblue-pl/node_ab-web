@@ -10,8 +10,7 @@ const chalk = require('chalk');
 // const abFS = require('ab-fs');
 
 
-class abWeb_Dist extends abWeb.Ext
-{
+class abWeb_Dist extends abWeb.Ext {
 
     constructor(abWeb, extPath)
     { super(abWeb, extPath);

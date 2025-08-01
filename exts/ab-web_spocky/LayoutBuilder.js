@@ -7,8 +7,7 @@ const
     abXmlParser = require('ab-xml-parser')
 ;
 
-class LayoutBuilder
-{
+class LayoutBuilder {
 
     static Build(ext, layoutPath, packagePath)
     {

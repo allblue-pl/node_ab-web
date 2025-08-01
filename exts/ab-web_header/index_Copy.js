@@ -13,8 +13,7 @@ const
 // const abFS = require('ab-fs');
 
 
-class abWeb_Header extends abWeb.Ext
-{
+class abWeb_Header extends abWeb.Ext {
 
     constructor(ab_web, ext_path)
     { super(ab_web, ext_path);

@@ -1,7 +1,6 @@
 'use strict';
 
-module.exports.init = function(conf, data) 
-{
+module.exports.init = function(conf, data)  {
 
     conf
         .init('jquery')

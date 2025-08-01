@@ -1,7 +1,6 @@
 'use strict';
 
-module.exports.init = function(conf, data) 
-{
+module.exports.init = function(conf, data)  {
     conf.extArr(data['dist'].paths, [
         '../dev/node_modules/spk-tinymce/css/**',
 

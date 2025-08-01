@@ -12,8 +12,7 @@ const
     LayoutBuilder = require('./LayoutBuilder')
 ;
 
-class abWeb_Spocky extends abWeb.Ext
-{
+class abWeb_Spocky extends abWeb.Ext {
 
     constructor(abWeb, extPath)
     { super(abWeb, extPath);

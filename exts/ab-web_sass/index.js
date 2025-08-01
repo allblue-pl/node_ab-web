@@ -12,8 +12,7 @@ const
 // const nodeSass = require('node-sass');
 
 
-class abWeb_Sass extends abWeb.Ext
-{
+class abWeb_Sass extends abWeb.Ext {
 
     constructor(abWeb, extPath)
     { super(abWeb, extPath);

@@ -6,8 +6,7 @@ const path = require('path');
 const abWeb = require('../../.');
 
 
-class abWeb_Replace extends abWeb.Ext
-{
+class abWeb_Replace extends abWeb.Ext {
 
     constructor(abWeb, extPath)
     { super(abWeb, extPath);

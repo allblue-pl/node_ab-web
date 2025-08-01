@@ -3,8 +3,7 @@
 const js0 = require('js0');
 
 
-class Tag
-{
+class Tag {
 
     get html() {
         var html = '<' + this.name;
