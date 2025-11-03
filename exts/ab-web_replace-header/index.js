@@ -8,8 +8,7 @@ const abWeb = require('../../.');
 
 class abWeb_Replace extends abWeb.Ext {
 
-    constructor(abWeb, extPath)
-    { super(abWeb, extPath);
+    constructor(abWeb, extPath) { super(abWeb, extPath);
         this._header = this.uses('header');
         this._header.afterBuild(() => {
             this.build();
@@ -19,8 +18,7 @@ class abWeb_Replace extends abWeb.Ext {
     }
 
     /* abWeb.Ext Overrides */
-    __build(taskName)
-    {
+    __build(taskName) {
         this.console.info('Building...');
 
         let promises = [];
@@ -45,9 +43,11 @@ class abWeb_Replace extends abWeb.Ext {
                     }
 
                     content = content.toString();
-                    content = content.replace(/{{base}}/g, this.buildInfo.base);
-                    content = content.replace(/{{header}}/g, this._header.getHtml_Header());
-                    content = content.replace(/{{postBodyInit}}/g, this._header.getHtml_PostBodyInit());
+                    content = content.replace(/{{Base}}/g, this.buildInfo.base);
+                    content = content.replace(/{{Header}}/g, this._header.getHtml_Header());
+                    content = content.replace(/{{Header_Scripts}}/g, this._header.getHtml_Header_Scripts());
+                    content = content.replace(/{{PostBody}}/g, this._header.getHtml_PostBody());
+                    content = content.replace(/{{PostBody_Scripts}}/g, this._header.getHtml_PostBody_Scripts());
 
                     let newFile = path.resolve(newFileName);
                     fs.writeFile(newFile, content, (err) => {
@@ -70,14 +70,12 @@ class abWeb_Replace extends abWeb.Ext {
             });
     }
 
-    __onChange(fsPaths, changes)
-    {
+    __onChange(fsPaths, changes) {
         this._files = new Set(fsPaths.files);
         this._header.build();
     }
 
-    __parse(config)
-    {
+    __parse(config) {
         if (!('files' in config))
             return;
 

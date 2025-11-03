@@ -14,8 +14,7 @@ const
 
 class abWeb_Sass extends abWeb.Ext {
 
-    constructor(abWeb, extPath)
-    { super(abWeb, extPath);
+    constructor(abWeb, extPath) { super(abWeb, extPath);
         this._header = this.uses('header');
 
         this.cssDir = path.join(this.buildInfo.front, 'css');
@@ -44,8 +43,7 @@ class abWeb_Sass extends abWeb.Ext {
     }
 
 
-    _createCss(css, sourceAlias)
-    {
+    _createCss(css, sourceAlias) {
         let cssPath = path.join(this.cssDir, sourceAlias === '_default' ?
                 'sass.css' : `sass-${sourceAlias}.css`);
 
@@ -102,8 +100,7 @@ class abWeb_Sass extends abWeb.Ext {
         fs.writeFileSync(cssPath, relativeCss);
     }
 
-    _getSources(fsPaths)
-    {
+    _getSources(fsPaths) {
         let sources = {
             '_default': '',
         };
@@ -211,8 +208,7 @@ class abWeb_Sass extends abWeb.Ext {
         return sources;
     }
 
-    _parseSource(url, prev, done)
-    {
+    _parseSource(url, prev, done) {
         if (url.indexOf('{abWeb}') === 0) {
             url = url.substring('{abWeb}'.length);
         }
@@ -307,8 +303,7 @@ class abWeb_Sass extends abWeb.Ext {
 
 
     /* abWeb.Ext Overrides */
-    __build(taskName)
-    {
+    __build(taskName) {
         let promises = [];
         for (let sourceAlias in this._sources) {
             let sourcePath = sourceAlias === '_default' ? 
@@ -389,14 +384,12 @@ class abWeb_Sass extends abWeb.Ext {
         })();
     }
 
-    __onChange(fsPaths, changes)
-    {        
+    __onChange(fsPaths, changes) {        
         this._sources = this._getSources(fsPaths);
         this.build();
     }
 
-    __parse(config)
-    {
+    __parse(config) {
         if (!('paths' in config))
             return;
 

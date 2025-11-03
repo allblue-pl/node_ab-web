@@ -19,8 +19,7 @@ class Tag {
     }
 
 
-    constructor(name, attribs, content = null)
-    {
+    constructor(name, attribs, content = null) {
         js0.args(arguments, 'string', 'object', [ 'string', js0.Default ]);
 
         this.name = name,

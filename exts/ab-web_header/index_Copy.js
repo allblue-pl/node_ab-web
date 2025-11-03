@@ -15,15 +15,13 @@ const
 
 class abWeb_Header extends abWeb.Ext {
 
-    constructor(ab_web, ext_path)
-    { super(ab_web, ext_path);
+    constructor(ab_web, ext_path) { super(ab_web, ext_path);
         this._exportHash = [];
         this._filePath = path.join(this.buildInfo.back, 'header.html');
         this._tagsGroups = new abWeb.Groups(this);
     }
 
-    addTag(groupId, ...args)
-    {
+    addTag(groupId, ...args) {
         if (!this._tagsGroups.has(groupId))
             this.addTagsGroup(groupId);
 
@@ -33,24 +31,20 @@ class abWeb_Header extends abWeb.Ext {
         this.build();
     }
 
-    addTagsGroup(groupId, props = {})
-    {
+    addTagsGroup(groupId, props = {}) {
         this._tagsGroups.add(groupId, props);
     }
 
-    clearTagsGroup(groupId)
-    {
+    clearTagsGroup(groupId) {
         this._tagsGroups.clear(groupId);
         this.build();
     }
 
-    hasTagsGroup(groupId)
-    {
+    hasTagsGroup(groupId) {
         return this._tagsGroups.has(groupId);
     }
 
-    getHtml()
-    {
+    getHtml() {
         var html = '';
 
         if (this._exportHash.includes('js')) {
@@ -76,8 +70,7 @@ class abWeb_Header extends abWeb.Ext {
     }
 
 
-    _compareSets(setA, setB)
-    {
+    _compareSets(setA, setB) {
         if (setA.size !== setB.size)
             return false;
 
@@ -91,8 +84,7 @@ class abWeb_Header extends abWeb.Ext {
 
 
     /* abWeb.Ext Overrides */
-    __build(taskName)
-    { let self = this;
+    __build(taskName) { let self = this;
         return new Promise((resolve, reject) => {
             self.console.info('Building...');
 
@@ -109,8 +101,7 @@ class abWeb_Header extends abWeb.Ext {
         });
     }
 
-    __clean(taskName)
-    { const self = this;
+    __clean(taskName) { const self = this;
         return new Promise((resolve, reject) => {
             fs.unlink(self._filePath, (err, stat) => {
                 if (err === null)
@@ -123,8 +114,7 @@ class abWeb_Header extends abWeb.Ext {
         });
     }
 
-    __parse(config)
-    {
+    __parse(config) {
         this._exportHash = config.exportHash;
 
         // abWeb.types.conf(config, {

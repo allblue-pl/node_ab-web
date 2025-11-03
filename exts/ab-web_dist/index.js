@@ -12,20 +12,17 @@ const chalk = require('chalk');
 
 class abWeb_Dist extends abWeb.Ext {
 
-    constructor(abWeb, extPath)
-    { super(abWeb, extPath);
+    constructor(abWeb, extPath) { super(abWeb, extPath);
         this._path = this.buildInfo.dist;
     }
 
 
     /* abWeb.Ext Overrides */
-    __build(taskName)
-    {
+    __build(taskName) {
         
     }
 
-    __onChange(fsPaths, changes)
-    {
+    __onChange(fsPaths, changes) {
         for (let fsPath of fsPaths.files) {
             let fileRelPath = path.relative(path.join('..', 'dev'), 
                     fsPath);
@@ -40,8 +37,7 @@ class abWeb_Dist extends abWeb.Ext {
         }
     }
 
-    __parse(config)
-    {
+    __parse(config) {
         // if ('path' in config)
         //     this._path = config.path;
 
@@ -56,8 +52,7 @@ class abWeb_Dist extends abWeb.Ext {
         this.build();
     }
 
-    __parse_Pre(config)
-    {
+    __parse_Pre(config) {
         /* Shouldn't be deleted in case of 2 different builds without overlaping resources. */
         // let distPath = path.join(this.buildInfo.index, 'dist');
         // if (fs.existsSync(distPath))

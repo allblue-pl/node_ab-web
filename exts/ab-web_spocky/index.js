@@ -14,8 +14,7 @@ const
 
 class abWeb_Spocky extends abWeb.Ext {
 
-    constructor(abWeb, extPath)
-    { super(abWeb, extPath);
+    constructor(abWeb, extPath) { super(abWeb, extPath);
         this._header = this.uses('header');
         this._jsLibs = this.uses('js-libs');
 
@@ -35,8 +34,7 @@ class abWeb_Spocky extends abWeb.Ext {
     }
 
 
-    _buildIndex()
-    {
+    _buildIndex() {
         let changed = false;
         
         if (this._layoutPaths.length !== this._indexLayoutPaths.length)
@@ -103,8 +101,7 @@ class abWeb_Spocky extends abWeb.Ext {
 
 
     /* abWeb.Ext Overrides */
-    __build(taskName)
-    {
+    __build(taskName) {
         this.console.info('Building...');   
         let layoutPaths = [];
         for (let [ i, layoutPath ] of this._layoutPaths_ToBuild) {
@@ -162,8 +159,7 @@ class abWeb_Spocky extends abWeb.Ext {
             });
     }
 
-    __onChange(fsPaths, changes)
-    {
+    __onChange(fsPaths, changes) {
         this._layoutPaths = fsPaths.layouts;
         if ('layouts' in changes) {
             for (let change of changes.layouts)
@@ -196,8 +192,7 @@ class abWeb_Spocky extends abWeb.Ext {
         this.build();
     }
 
-    __parse(config)
-    {
+    __parse(config) {
         if (!('packages' in config))
             return;
 
@@ -223,8 +218,7 @@ class abWeb_Spocky extends abWeb.Ext {
         this.watch('packages', [ 'add' ], packagePaths);
     }
 
-    __parse_Pre(config)
-    {
+    __parse_Pre(config) {
         if (!('packages' in config))
             return;
 

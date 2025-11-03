@@ -12,15 +12,13 @@ const chalk = require('chalk');
 
 class abWeb_Copy extends abWeb.Ext {
 
-    constructor(abWeb, extPath)
-    { super(abWeb, extPath);
+    constructor(abWeb, extPath) { super(abWeb, extPath);
         this._config = null;
     }
 
 
     /* abWeb.Ext Overrides */
-    __build(taskName)
-    {
+    __build(taskName) {
         if (this._config === null)
             return;
         if (!('paths' in this._config))
@@ -37,13 +35,11 @@ class abWeb_Copy extends abWeb.Ext {
         }
     }
 
-    __onChange(fsPaths, changes)
-    {
+    __onChange(fsPaths, changes) {
         this.build();
     }
 
-    __parse(config)
-    {
+    __parse(config) {
         this._config = config;
 
         if (!this.buildInfo.type('rel'))
@@ -60,8 +56,7 @@ class abWeb_Copy extends abWeb.Ext {
         this.watch('files', [ 'add', 'unlink', 'change' ], watchPaths);
     }
 
-    __parse_Pre(config)
-    {
+    __parse_Pre(config) {
         this._config = config;
 
         if (!this.buildInfo.type('rel'))

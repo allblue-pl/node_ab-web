@@ -9,8 +9,7 @@ const
 
 class LayoutBuilder {
 
-    static Build(ext, layoutPath, packagePath)
-    {
+    static Build(ext, layoutPath, packagePath) {
         let layoutName = path.basename(layoutPath, '.html');
         let buildDirPath = path.join(packagePath, 'js-lib/$layouts');
         let buildPath = path.join(buildDirPath, path.basename(layoutPath, 
@@ -39,8 +38,7 @@ export default class ${layoutName} extends spocky.Layout {
     }
 
 
-    constructor(defaultFieldValues = {})
-    {
+    constructor(defaultFieldValues = {}) {
         js0.args(arguments, [ js0.RawObject, js0.Default ]);
 
         super(${layoutName}.Content, defaultFieldValues);
@@ -57,8 +55,7 @@ export default class ${layoutName} extends spocky.Layout {
         fs.writeFileSync(buildPath, buildContent);
     }
 
-    static AddNode(parentLayoutNode, node)
-    {
+    static AddNode(parentLayoutNode, node) {
         if (node.type === 'text') {
             parentLayoutNode.push(node.value);
             return;
@@ -74,8 +71,7 @@ export default class ${layoutName} extends spocky.Layout {
         }
     }
 
-    static ParseFields(content)
-    {
+    static ParseFields(content) {
         let lTextsArr = [];
 
         let regexpStrs_FieldName = '([a-zA-Z][a-zA-Z0-9._]*)+?(\\((.*)\\))?';

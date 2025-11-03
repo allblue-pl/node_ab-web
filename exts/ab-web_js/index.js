@@ -14,8 +14,7 @@ const uglifyJS = require('uglify-js');
 
 class abWeb_JS extends abWeb.Ext {
 
-    constructor(ab_web, ext_path)
-    { super(ab_web, ext_path);
+    constructor(ab_web, ext_path) { super(ab_web, ext_path);
         this._header = this.uses('header');
 
         this._scriptsGroups_Include = new abWeb.Groups(this);
@@ -39,8 +38,7 @@ class abWeb_JS extends abWeb.Ext {
         this._scriptPath_Map = path.join(this.buildInfo.front, 'js', 'script.min.js.map');
     }
 
-    addScript(groupId, scriptPath, type = 'compile')
-    {
+    addScript(groupId, scriptPath, type = 'compile') {
         groupId = `js.${type}.${groupId}`;
         let scriptsGroups = this.getScriptsGroups(type);
 
@@ -51,18 +49,15 @@ class abWeb_JS extends abWeb.Ext {
         this.build();
     }
 
-    addScript_Compile(groupId, scriptPath)
-    {
+    addScript_Compile(groupId, scriptPath) {
         this.addScript(groupId, scriptPath, 'compile');
     }
 
-    addScript_Include(groupId, scriptPath)
-    {
+    addScript_Include(groupId, scriptPath) {
         this.addScript(groupId, scriptPath, 'include');
     }
 
-    addScriptsGroup(groupId, props = {}, type = 'compile')
-    {
+    addScriptsGroup(groupId, props = {}, type = 'compile') {
         groupId = `js.${type}.${groupId}`;
 
         this._header.addScriptUrisGroup_PostBody(groupId, props);
@@ -70,16 +65,14 @@ class abWeb_JS extends abWeb.Ext {
         this.getScriptsGroups(type).add(groupId, props);
     }
 
-    clearScriptsGroup(groupId, type = 'compile')
-    {
+    clearScriptsGroup(groupId, type = 'compile') {
         groupId = `js.${type}.${groupId}`;
 
         this.getScriptsGroups(type).clear(groupId);
         this.build();
     }
 
-    getScriptsGroups(type)
-    {
+    getScriptsGroups(type) {
         if (type === 'compile')
             return this._scriptsGroups_Compile;
         else if (type === 'include')
@@ -89,8 +82,7 @@ class abWeb_JS extends abWeb.Ext {
     }
 
 
-    _compareSets(setA, setB)
-    {
+    _compareSets(setA, setB) {
         if (setA.size !== setB.size)
             return false;
 
@@ -104,8 +96,7 @@ class abWeb_JS extends abWeb.Ext {
 
 
     /* abWeb.Ext Overrides */
-    __build(task_name)
-    {
+    __build(task_name) {
         this.console.info('Building...');
 
         let types = [ 'include', 'compile' ];
@@ -244,13 +235,11 @@ class abWeb_JS extends abWeb.Ext {
         }
     }
 
-    __clean(task_name)
-    {
+    __clean(task_name) {
         return null;
     }
 
-    __onChange(fsPaths, changes)
-    {
+    __onChange(fsPaths, changes) {
         if (this.buildInfo.type('dev')) {
             let types = [ 'include', 'compile' ];
             let build = false;
@@ -278,8 +267,7 @@ class abWeb_JS extends abWeb.Ext {
         }
     }
 
-    __parse(config)
-    {
+    __parse(config) {
         // abWeb.types.conf(config, {
         //     'paths':  {
         //         required: false,

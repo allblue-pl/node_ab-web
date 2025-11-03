@@ -9,8 +9,7 @@ const jsLibs = require('js-libs');
 
 class abWeb_JSLibs extends abWeb.Ext {
 
-    constructor(ab_web, ext_path)
-    { super(ab_web, ext_path);
+    constructor(ab_web, ext_path) { super(ab_web, ext_path);
         this._js = this.uses('js');
 
         this.scriptPath = null;
@@ -24,8 +23,7 @@ class abWeb_JSLibs extends abWeb.Ext {
         });
     }
 
-    addLib(libName, libPath)
-    {
+    addLib(libName, libPath) {
         if (!fs.existsSync(libPath)) {
             this.console.error(`Libs '${libName}' path does not exist: '${libPath}'.`);
             return;
@@ -41,8 +39,7 @@ class abWeb_JSLibs extends abWeb.Ext {
     }
 
 
-    _createLib_Promise(libName, libPath)
-    {
+    _createLib_Promise(libName, libPath) {
         return new Promise((resolve, reject) => {
             jsLibs.build(libName, libPath, path.join(
                     this.buildPath, libName), (err, builtFilePaths) => {
@@ -67,8 +64,7 @@ class abWeb_JSLibs extends abWeb.Ext {
         });
     }
 
-    _createScript_Promise(scriptInfo)
-    {
+    _createScript_Promise(scriptInfo) {
         let libPath = this._libPaths.get(scriptInfo.libName);
 
         return new Promise((resolve, reject) => {
@@ -98,8 +94,7 @@ class abWeb_JSLibs extends abWeb.Ext {
 
 
     /* abWeb.Ext Overrides */
-    __build()
-    {
+    __build() {
         this.console.info('Building.');
 
         let buildPromises = [];
@@ -140,8 +135,7 @@ class abWeb_JSLibs extends abWeb.Ext {
         // });
     }
 
-    __onChange(fsPaths, changes)
-    {
+    __onChange(fsPaths, changes) {
         for (let libName in changes) {
             for (let change of changes[libName]) {
                 let scriptToBuildFound = false;
@@ -165,8 +159,7 @@ class abWeb_JSLibs extends abWeb.Ext {
         this.build();
     }
 
-    __parse(config, configPath)
-    {
+    __parse(config, configPath) {
         if (!('path' in config)) {
             this.console.warn(`'path' not set in config.`);
             return;
