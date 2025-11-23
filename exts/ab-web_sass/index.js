@@ -389,7 +389,7 @@ class abWeb_Sass extends abWeb.Ext {
         this.build();
     }
 
-    __parse(config) {
+    __parse(config, configPath) {
         if (!('paths' in config))
             return;
 
@@ -423,6 +423,8 @@ class abWeb_Sass extends abWeb.Ext {
 
         let watchPaths = [];
         for (let fsPath of config.paths) {
+            fsPath = path.join(configPath, fsPath);
+
             if (path.extname(fsPath) === '.scss' || path.extname(fsPath) === '.css') {
                 this._stylesPaths.push(fsPath);
 
@@ -443,6 +445,8 @@ class abWeb_Sass extends abWeb.Ext {
             let variant_StylePaths = [];
 
             for (let fsPath of config.variants[variant]) {
+                fsPath = path.join(configPath, fsPath);
+
                 if (path.extname(fsPath) === '.scss' || 
                         path.extname(fsPath) === '.css') {
                     variant_StylePaths.push(fsPath);
@@ -470,6 +474,8 @@ class abWeb_Sass extends abWeb.Ext {
             let substyle_StylePaths = [];
 
             for (let fsPath of config.substyles[substyle]) {
+                fsPath = path.join(configPath, fsPath);
+
                 if (path.extname(fsPath) === '.scss' || 
                         path.extname(fsPath) === '.css') {
                     substyle_StylePaths.push(fsPath);

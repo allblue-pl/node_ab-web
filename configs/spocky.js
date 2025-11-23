@@ -1,14 +1,14 @@
 'use strict';
 
-module.exports.init = function(conf, data)  {
-    require('./ab-fields').init(conf, data);
-    require('./ab-layouts').init(conf, data);
-    require('./ab-nodes').init(conf, data);
-    require('./ab-strings').init(conf, data);
-    require('./ab-text-parser').init(conf, data);
+module.exports.init = function(conf, data, devPath)  {
+    require('./ab-fields').init(conf, data, devPath);
+    require('./ab-layouts').init(conf, data, devPath);
+    require('./ab-nodes').init(conf, data, devPath);
+    require('./ab-strings').init(conf, data, devPath);
+    require('./ab-text-parser').init(conf, data, devPath);
     
     conf.extObj(data['js-libs'].libs, {
-        'spocky': '../dev/node_modules/spocky/js-lib',
+        'spocky': devPath + '/node_modules/spocky/js-lib',
     });
 }
 

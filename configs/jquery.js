@@ -1,7 +1,7 @@
 'use strict';
 
-module.exports.init = function(conf, data)  {
+module.exports.init = function(conf, data, devPath)  {
     conf.extArr(data['js']['include'], [
-        '../dev/node_modules/jquery/dist/jquery.min.js',
+        devPath + '/node_modules/jquery/dist/jquery.min.js',
     ]);
 }

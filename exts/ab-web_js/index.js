@@ -15,6 +15,7 @@ const uglifyJS = require('uglify-js');
 class abWeb_JS extends abWeb.Ext {
 
     constructor(ab_web, ext_path) { super(ab_web, ext_path);
+        this._configPath = null;
         this._header = this.uses('header');
 
         this._scriptsGroups_Include = new abWeb.Groups(this);
@@ -214,8 +215,15 @@ class abWeb_JS extends abWeb.Ext {
                 for (let [ groupId, scriptPaths ] of scriptGroups) {
                     this.console.info('    - ' + groupId);
                     for (let fsPath of scriptPaths) {
-                        let relPath = path.relative(this.buildInfo.index, fsPath)
-                                .replace(/\\/g, '/');
+                        let relPath = null;
+                        try {
+                            relPath = path.relative(this.buildInfo.index, fsPath)
+                                    .replace(/\\/g, '/');
+                        } catch (e) {
+                            this.console.error(e.toString());
+                            continue;
+                        }
+
                         let uri = this.buildInfo.base + relPath + '?v=' +
                                 this.buildInfo.hash;
 
@@ -267,7 +275,8 @@ class abWeb_JS extends abWeb.Ext {
         }
     }
 
-    __parse(config) {
+    __parse(config, configPath) {
+        this._configPath = configPath;
         // abWeb.types.conf(config, {
         //     'paths':  {
         //         required: false,
@@ -276,24 +285,36 @@ class abWeb_JS extends abWeb.Ext {
         // });
 
         if ('include' in config) {
+            let fsPaths = [];
+            for (let fsPath of config.include)
+                fsPaths.push(path.join(configPath, fsPath));
+
             if (this.buildInfo.type('dev'))
-                this.watch('include', [ 'add', 'unlink' ], config.include);
+                this.watch('include', [ 'add', 'unlink' ], fsPaths);
             else if (this.buildInfo.type('rel'))
-                this.watch('include', [ 'add', 'unlink', 'change' ], config.include);
+                this.watch('include', [ 'add', 'unlink', 'change' ], fsPaths);
         }
 
         if ('compile' in config) {
+            let fsPaths = [];
+            for (let fsPath of config.compile)
+                fsPaths.push(path.join(configPath, fsPath));
+
             if (this.buildInfo.type('dev'))
-                this.watch('compile', [ 'add', 'unlink' ], config.compile);
+                this.watch('compile', [ 'add', 'unlink' ], fsPaths);
             else if (this.buildInfo.type('rel'))
-                this.watch('compile', [ 'add', 'unlink', 'change' ], config.compile);
+                this.watch('compile', [ 'add', 'unlink', 'change' ], fsPaths);
         }
 
         if ('paths' in config) {
+            let fsPaths = [];
+            for (let fsPath of config.paths)
+                fsPaths.push(path.join(configPath, fsPath));
+
             if (this.buildInfo.type('dev'))
-                this.watch('compile', [ 'add', 'unlink' ], config.paths);
+                this.watch('compile', [ 'add', 'unlink' ], fsPaths);
             else if (this.buildInfo.type('rel'))
-                this.watch('compile', [ 'add', 'unlink', 'change' ], config.paths);
+                this.watch('compile', [ 'add', 'unlink', 'change' ], fsPaths);
         }
 
         this.build();

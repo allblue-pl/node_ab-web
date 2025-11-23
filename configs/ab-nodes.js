@@ -1,7 +1,7 @@
 'use strict';
 
-module.exports.init = function(conf, data)  {
+module.exports.init = function(conf, data, devPath)  {
     conf.extendObject(data['js-libs'].libs, {
-        'ab-nodes': '../dev/node_modules/ab-nodes/js-lib',
+        'ab-nodes': devPath + '/node_modules/ab-nodes/js-lib',
     });
 }

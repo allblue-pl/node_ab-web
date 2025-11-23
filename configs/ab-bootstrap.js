@@ -1,12 +1,12 @@
 'use strict';
 
-module.exports.init = function(conf, data)  {
+module.exports.init = function(conf, data, devPath)  {
     conf.extArr(data['sass']['paths'], [
-        '../dev/node_modules/ab-bootstrap/scss',
+        devPath + '/node_modules/ab-bootstrap/scss',
     ]);
 
     conf.extArr(data['js']['include'], [
-        '../dev/node_modules/bootstrap/dist/js/bootstrap.bundle.min.js',
-        '../dev/node_modules/@popperjs/core/dist/umd/popper.js',
+        devPath + '/node_modules/bootstrap/dist/js/bootstrap.bundle.min.js',
+        devPath + '/node_modules/@popperjs/core/dist/umd/popper.js',
     ]);
 }

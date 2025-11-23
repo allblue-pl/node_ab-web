@@ -1,7 +1,7 @@
 'use strict';
 
-module.exports.init = function(conf, data)  {
+module.exports.init = function(conf, data, devPath)  {
     conf.extendObject(data['js-libs'].libs, {
-        'ab-pager': '../dev/node_modules/ab-pager/js-lib',
+        'ab-pager': devPath + '/node_modules/ab-pager/js-lib',
     });   
 }

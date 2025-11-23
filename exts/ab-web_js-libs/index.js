@@ -4,6 +4,7 @@ const fs = require('fs');
 const path = require('path');
 
 const abWeb = require('../../.');
+const babel = require('@babel/core');
 const jsLibs = require('js-libs');
 
 
@@ -41,8 +42,43 @@ class abWeb_JSLibs extends abWeb.Ext {
 
     _createLib_Promise(libName, libPath) {
         return new Promise((resolve, reject) => {
-            jsLibs.build(libName, libPath, path.join(
-                    this.buildPath, libName), (err, builtFilePaths) => {
+            let wb = new jsLibs.WebBuilder(scriptInfo.libName, libPath, path.join(
+                    this.buildPath, scriptInfo.libName));
+            wb.addParser((code, fileFSPath, buildFSPath) => {
+                if (this.buildInfo.type('rel'))
+                    return code;
+
+                let filename = path.relative(path.dirname(buildFSPath), fileFSPath)
+                        .replace(/\\/g, '/');
+
+                let script = null;
+
+                try {
+                    script = babel.transform(code, {
+                        presets: [ [require('@babel/preset-env'), {
+                            useBuiltIns: 'entry',
+                            corejs: 3,
+                        }], ],
+                        filename: filename,
+                        sourceFileName: filename,
+                        sourceMaps: true,
+                        minified: false,
+                    });
+                } catch (e) {
+                    this.console.error(`Cannot compile '${fileFSPath}': ` + e.stack);
+                    script = {
+                        code: `throw new Error('Cannot compile \\\'${fileFSPath.replace(/\\/g, '\\\\')}\\\'.');`,
+                        map: '',
+                    };
+                }
+
+                fs.writeFileSync(`${buildFSPath}.map`, JSON.stringify(script.map));
+
+                return script.code + "\r\n//# sourceMappingURL=" + 
+                        path.basename(buildFSPath);
+            });
+
+            wb.build((err, builtFilePaths) => {
                 if (err !== null) {
                     this.console.error(`Error when building \`${libName}\`.`,
                             err.stack);
@@ -68,9 +104,42 @@ class abWeb_JSLibs extends abWeb.Ext {
         let libPath = this._libPaths.get(scriptInfo.libName);
 
         return new Promise((resolve, reject) => {
-            jsLibs.buildScript(scriptInfo.libName, libPath, path.join(
-                    this.buildPath, scriptInfo.libName), scriptInfo.scriptPath, 
-                    (err, builtFSPath) => {
+            let wb = new jsLibs.WebBuilder(scriptInfo.libName, libPath, path.join(
+                    this.buildPath, scriptInfo.libName));
+            wb.addParser((code, fileFSPath, buildFSPath) => {
+                if (this.buildInfo.type('rel'))
+                    return code;
+
+                let filename = path.relative(path.dirname(buildFSPath), 
+                        fileFSPath).replace(/\\/g, '/');
+                        
+                let script = null;
+
+                try {
+                    script = babel.transform(code, {
+                        presets: [ [require('@babel/preset-env'), {
+                            useBuiltIns: 'entry',
+                            corejs: 3,
+                        }], ],
+                        filename: filename,
+                        sourceFileName: filename,
+                        sourceMaps: true,
+                        minified: false,
+                    });
+                } catch (e) {
+                    this.console.error(`Cannot compile '${fileFSPath}': ` + e.stack);
+                    script = {
+                        code: `throw new Error('Cannot compile \\\'${fileFSPath.replace(/\\/g, '\\\\')}\\\'.');`,
+                        map: '',
+                    };
+                }
+                fs.writeFileSync(`${buildFSPath}.map`, JSON.stringify(script.map));
+
+                return script.code + '\r\n//# sourceMappingURL=' + 
+                        path.basename(buildFSPath) + '.map'
+            });
+
+            wb.buildScript(scriptInfo.scriptPath, (err, builtFSPath) => {
                 if (err !== null) {
                     this.console.error(`Error when building '${scriptInfo.libName}:` +
                             `${scriptInfo.scriptPath}'.`,
@@ -167,7 +236,7 @@ class abWeb_JSLibs extends abWeb.Ext {
 
         this.buildPath = path.join(this.buildInfo.tmp, config.build.dev);
 
-        let scriptPath = path.join(path.dirname(configPath), config.path);
+        let scriptPath = path.join(configPath, config.path);
 
         if (!fs.existsSync(scriptPath)) {
             this.console.error(`'path' in config does not exist: '${config.path}'.`);
@@ -178,9 +247,9 @@ class abWeb_JSLibs extends abWeb.Ext {
         if (!('libs' in config))
             return;
 
-        let libs = config.libs;
+        // let libs = config.libs;
         for (let libName in config.libs)
-            this.addLib(libName, config.libs[libName]);
+            this.addLib(libName, path.join(configPath, config.libs[libName]));
 
         this._js.clearScriptsGroup('js-libs');
         // console.log('Test', this.scriptPath);

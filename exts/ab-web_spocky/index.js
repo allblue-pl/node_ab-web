@@ -192,7 +192,7 @@ class abWeb_Spocky extends abWeb.Ext {
         this.build();
     }
 
-    __parse(config) {
+    __parse(config, configPath) {
         if (!('packages' in config))
             return;
 
@@ -211,7 +211,7 @@ class abWeb_Spocky extends abWeb.Ext {
         let packagePaths = [];
         for (let fsPath of config.packages) {
             // layoutPaths.push(path.join(fsPath, 'layouts/*.html'));
-            packagePaths.push(fsPath);
+            packagePaths.push(path.join(configPath, fsPath));
         }
 
         this.watch('layouts', [ 'add', 'unlink', 'change' ], this._layoutPaths_Watched);

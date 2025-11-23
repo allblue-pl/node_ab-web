@@ -1,14 +1,14 @@
 'use strict';
 
-module.exports.init = function(conf, data)  {
+module.exports.init = function(conf, data, devPath)  {
     conf
         .extArr(data['sass']['paths'], [
-            '../dev/node_modules/spk-messages/scss',
+            devPath + '/node_modules/spk-messages/scss',
         ])
         .extArr(data['spocky']['packages'], [
-            '../dev/node_modules/spk-messages',
+            devPath + '/node_modules/spk-messages',
         ])
         .extArr(data['dist']['paths'], [
-            '../dev/node_modules/spk-messages/images/**',
+            devPath + '/node_modules/spk-messages/images/**',
         ]);
 }

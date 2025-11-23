@@ -1,20 +1,20 @@
 'use strict';
 
-module.exports.init = function(conf, data)  {
+module.exports.init = function(conf, data, devPath)  {
     conf.extArr(data['dist'].paths, [
-        '../dev/node_modules/spk-tinymce/css/**',
+        devPath + '/node_modules/spk-tinymce/css/**',
 
-        '../dev/node_modules/tinymce/icons/**',
-        '../dev/node_modules/tinymce/plugins/**',
-        '../dev/node_modules/tinymce/skins/**',
-        '../dev/node_modules/tinymce/themes/**',
+        devPath + '/node_modules/tinymce/icons/**',
+        devPath + '/node_modules/tinymce/plugins/**',
+        devPath + '/node_modules/tinymce/skins/**',
+        devPath + '/node_modules/tinymce/themes/**',
     ]);   
 
     conf.extArr(data['js'].compile, [
-        '../dev/node_modules/tinymce/tinymce.js',
+        devPath + '/node_modules/tinymce/tinymce.js',
     ]);
 
     conf.extArr(data['spocky'].packages, [
-        '../dev/node_modules/spk-tinymce',
+        devPath + '/node_modules/spk-tinymce',
     ]);   
 }

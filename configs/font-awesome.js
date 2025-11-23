@@ -1,14 +1,14 @@
 'use strict';
 
-module.exports.init = function(conf, data)  {
+module.exports.init = function(conf, data, devPath)  {
     conf.extArr(data['sass']['paths'], [
-        '../dev/git/Font-Awesome/scss/brands.scss',
-        '../dev/git/Font-Awesome/scss/regular.scss',
-        '../dev/git/Font-Awesome/scss/solid.scss',
-        '../dev/git/Font-Awesome/scss/fontawesome.scss',
+        devPath + '/git/Font-Awesome/scss/brands.scss',
+        devPath + '/git/Font-Awesome/scss/regular.scss',
+        devPath + '/git/Font-Awesome/scss/solid.scss',
+        devPath + '/git/Font-Awesome/scss/fontawesome.scss',
     ]);
 
     conf.extArr(data['dist']['paths'], [
-        '../dev/git/Font-Awesome/webfonts/**',
+        devPath + '/git/Font-Awesome/webfonts/**',
     ]);
 }

@@ -1,11 +1,11 @@
 'use strict';
 
-module.exports.init = function(conf, data)  {
+module.exports.init = function(conf, data, devPath)  {
     conf
         .extArr(data['sass']['paths'], [
-            '../dev/node_modules/spk-tables/scss',
+            devPath + '/node_modules/spk-tables/scss',
         ])
         .extArr(data['spocky'].packages, [
-            '../dev/node_modules/spk-tables',
+            devPath + '/node_modules/spk-tables',
         ]);   
 }

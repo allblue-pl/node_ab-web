@@ -1,15 +1,15 @@
 'use strict';
 
-module.exports.init = function(conf, data)  {
+module.exports.init = function(conf, data, devPath)  {
     conf.init('moment');
 
     conf.extendObject(data['js-libs'].libs, {
-        'ab-date': '../dev/node_modules/ab-date/js-lib',
+        'ab-date': devPath + '/node_modules/ab-date/js-lib',
     });
     conf.extendObject(data['js-libs'].libs, {
-        'moment': '../dev/node_modules/ab-date/moment/js-lib',
+        'moment': devPath + '/node_modules/ab-date/moment/js-lib',
     });
     conf.extendObject(data['js-libs'].libs, {
-        'moment-timezone': '../dev/node_modules/ab-date/moment-timezone/js-lib',
+        'moment-timezone': devPath + '/node_modules/ab-date/moment-timezone/js-lib',
     });
 }

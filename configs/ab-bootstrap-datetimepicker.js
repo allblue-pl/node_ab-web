@@ -1,14 +1,14 @@
 'use strict';
 
-module.exports.init = function(conf, data)  {
+module.exports.init = function(conf, data, devPath)  {
     // conf.init('jquery');
     conf
         .init('jquery')
         .init('moment')
         .extArr(data['sass']['paths'], [
-            '../dev/node_modules/ab-bootstrap-datetimepicker/src/sass/bootstrap-datetimepicker-build.scss',
+            devPath + '/node_modules/ab-bootstrap-datetimepicker/src/sass/bootstrap-datetimepicker-build.scss',
         ])
         .extArr(data['js']['include'], [
-            '../dev/node_modules/ab-bootstrap-datetimepicker/src/js/bootstrap-datetimepicker.js',
+            devPath + '/node_modules/ab-bootstrap-datetimepicker/src/js/bootstrap-datetimepicker.js',
         ]);
 }

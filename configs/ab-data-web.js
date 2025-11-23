@@ -1,10 +1,10 @@
 'use strict';
 
-module.exports.init = function(conf, data)  {
-    require('./js0').init(conf, data);
-    require('./web-ab-api').init(conf, data);
+module.exports.init = function(conf, data, devPath)  {
+    require('./js0').init(conf, data, devPath);
+    require('./web-ab-api').init(conf, data, devPath);
 
     conf.extendObject(data['js-libs'].libs, {
-        'ab-data-web': '../dev/node_modules/ab-data-web/js-lib',
+        'ab-data-web': devPath + '/node_modules/ab-data-web/js-lib',
     });
 }
