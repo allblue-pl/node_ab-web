@@ -1,14 +1,20 @@
 {
   "name": "ab-web",
-  "version": "0.0.10",
+  "version": "0.1.0",
+  "type": "module",
+  "main": "index.js",
   "dependencies": {
-    "@babel/core": "7.14.*",
-    "@babel/preset-env": "7.14.*",
-    "chalk": "4.1.*",
-    "core-js-bundle": "3.15.*",
-    "regenerator-runtime": "0.13.*",
-    "sass": "1.37.*",
-    "uglify-js": "3.13.*"
+    "@babel/core": "7.29.*",
+    "@babel/preset-env": "7.29.*",
+    "chalk": "5.6.2",
+    "core-js-bundle": "3.49.*",
+    "regenerator-runtime": "0.14.*",
+    "sass": "1.99.*",
+    "uglify-js": "3.19.*"
   },
-  "browserslist": "> 0.25%, not dead"
+  "browserslist": "> 0.25%, not dead",
+  "devDependencies": {
+    "@types/node": "25.6.*",
+    "typescript": "6.0.*"
+  }
 }
