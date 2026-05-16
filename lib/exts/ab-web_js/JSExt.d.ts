@@ -9,6 +9,7 @@ export default class JSExt extends Ext {
     addScript_Compile(groupId: string, scriptPath: string): void;
     addScript_Include(groupId: string, scriptPath: string): void;
     addScriptsGroup(groupId: string, props?: GroupsProps<string>, type?: "compile" | "include"): void;
+    buildHeader(): void;
     clearScriptsGroup(groupId: string, type?: "compile" | "include"): void;
     getScriptsGroups(type: "compile" | "include"): Groups<string>;
     removeScript(groupId: string, scriptPath: string, type?: "compile" | "include"): void;

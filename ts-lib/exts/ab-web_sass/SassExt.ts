@@ -297,7 +297,9 @@ export default class SassExt extends Ext {
 
     /* abWeb.Ext Overrides */
     async __build(): Promise<boolean> {
-        let promises = [];
+        this.console.log("Building...");
+
+        let promises: Array<Promise<boolean>> = [];
         for (let sourceAlias in this.#sources) {
             let sourcePath = sourceAlias === '_default' ? 
                     this.#sourcePath : (this.#sourcePath_Base + '-' + 
@@ -312,8 +314,13 @@ export default class SassExt extends Ext {
                         return this.#parseSource(url, prev, done);
                     },
                     outputStyle: this.builder.isType('rel') ? 'compressed' : 'expanded',
-                    silenceDeprecations: [ 'color-functions', 'global-builtin', 
-                            'if-function', 'import', 'legacy-js-api' ],
+                    silenceDeprecations: [
+                            /* Bootstrap 5.3.x */
+                            'color-functions', 'global-builtin', 
+                            'if-function', 'import', 'legacy-js-api',
+                            /* Bootstrap 5.0.x */
+                            "abs-percent", "function-units",
+                            ],
                 }, (err, result) => {
                     if (err) {
                         this.console.error('Error compiling sass.');
@@ -356,7 +363,7 @@ export default class SassExt extends Ext {
         return "sass";
     }
 
-    __onChange(changeInfos: ChangeInfos): boolean {        
+    __onChange(changeInfos: ChangeInfos): boolean {
         this.#sources = this.#getSources(this.getWatchedFSPaths());
         
         this.build();

@@ -76,11 +76,15 @@ class ReplaceExt extends Ext {
             }));
         }
 
-        return await Promise.all(promises)
-            .then(() => {
-                this.console.success('Finished.');
-                return true;
-            });
+        let values = await Promise.all(promises);
+        for (let value of values) {
+            if (!value)
+                return false;
+        }
+
+        this.console.success('Finished.');
+
+        return true;
     }
 
     __getName(): string {

@@ -180,13 +180,13 @@ export default class HeaderExt extends Ext {
                         this.#script_FilePath)
                         .replace(/\\/g, '/');
                 let scriptUri = buildSettings.config.base + scriptRelPath + '?v=' +
-                        buildSettings.hash;
+                        buildSettings.buildHash;
                 html += `<script src="${scriptUri}"></script>`;
             }
         }
 
         if (this.#exportHash.includes('php')) {
-            html += '<?php const ABWeb_Hash = "' + buildSettings.hash + '"; ?>';
+            html += '<?php const ABWeb_Hash = "' + buildSettings.buildHash + '"; ?>';
         }
 
         /* Sort */
@@ -264,7 +264,7 @@ export default class HeaderExt extends Ext {
             } else {
                 let script = '';
                 if (this.#exportHash.includes('js'))
-                    script += 'var ABWeb_Hash = "' + this.builder.settings.hash + '";';
+                    script += 'var ABWeb_Hash = "' + this.builder.settings.buildHash + '";';
                 try {
                     fs.writeFileSync(this.#script_FilePath, script);
                 } catch (err) {

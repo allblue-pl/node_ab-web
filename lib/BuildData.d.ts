@@ -7,6 +7,7 @@ export default class BuildData {
         [key: string]: any;
     };
     get devFSPath(): string;
+    get initFSPath(): string;
     constructor(build: BuildSettings);
     ext(extFn: (buildSettings: BuildSettings, data: object, devPath: string) => void): BuildData;
     extArr(array: Array<any>, items: Array<any>): BuildData;

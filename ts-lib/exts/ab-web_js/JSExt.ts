@@ -7,10 +7,9 @@ import abFS from "ab-fs";
 import fs from "node:fs";
 import uglifyJS from "uglify-js";
 import babel from "@babel/core"
-import type { ChangeInfos, ExtConfigPreset, GroupsProps } from "../../ts-types.ts";
+import type { ChangeInfos, ExtConfigPreset, GroupsInfos, GroupsProps } from "../../ts-types.ts";
 
 export default class JSExt extends Ext {
-    #configPath: string;
     #header: HeaderExt;
     #jsPath_Tmp: string;
     #jsPath: string;
@@ -27,7 +26,6 @@ export default class JSExt extends Ext {
         let buildSettings = this.builder.settings;
         let buildConfig = buildSettings.config;
 
-        this.#configPath = builder.settings.initDir;
         this.#header = this.uses('header') as HeaderExt;
 
         this.#scriptsGroups_Include = new Groups(this);
@@ -35,7 +33,7 @@ export default class JSExt extends Ext {
 
         this.#scriptsGroups_Compile = new Groups(this);
         this.addScriptsGroup('js', {
-            after: [ 'js.include.js' ],
+            after: [ 'js' ],
             values: [],
         }, 'compile');
 
@@ -79,8 +77,14 @@ export default class JSExt extends Ext {
         this.getScriptsGroups(type).add(groupId, props);
     }
 
+    buildHeader() {
+        this.#header.build();
+    }
+
     clearScriptsGroup(groupId: string, type: "compile"|"include" = "compile"): void {
+        let groupId_Header = `js.${type}.${groupId}`;
         this.getScriptsGroups(type).clear(groupId);
+        this.#header.clearScriptUrisGroup_PostBody(groupId_Header);
         this.build();
     }
 
@@ -118,7 +122,7 @@ export default class JSExt extends Ext {
 
         if (this.builder.isType('rel')) {
             let js = {
-                include: `var ABWeb_Hash = '${buildSettings.hash}';\r\n`,
+                include: `var ABWeb_Hash = '${buildSettings.buildHash}';\r\n`,
                 compile: '',
             };
             for (let type of types) {
@@ -150,18 +154,24 @@ export default class JSExt extends Ext {
 
             try {
                 let script = babel.transform(js.compile, {
-                    presets: [ [require('@babel/preset-env'), {
-                        useBuiltIns: 'entry',
-                        corejs: 3,
-                    }], ],
+                    presets: [ 
+                        [ "@babel/preset-env", {
+                            useBuiltIns: 'entry',
+                            corejs: 3,
+                        }], 
+                    ],
                     filename: 'script.js',
                     sourceMaps: true,
                     minified: true,
                 });
 
-                let modulePaths_CoreJSBundle = path.dirname(require.resolve('core-js-bundle'));
+                let modulePaths_CoreJSBundle = path.join(
+                        this.builder.settings.config.dev, "node_modules", 
+                        "core-js-bundle");
                 // __dirname + '/../../node_modules/core-js-bundle/
-                let modulePaths_RegeneratorRuntime = path.dirname(require.resolve('regenerator-runtime'));
+                let modulePaths_RegeneratorRuntime = path.join(
+                        this.builder.settings.config.dev, "node_modules", 
+                        "regenerator-runtime");
                 // __dirname + '/../../node_modules/regenerator-runtime
 
                 let js_Include_Code = js_Include_Result === null ? 
@@ -235,13 +245,14 @@ export default class JSExt extends Ext {
                         }
 
                         let uri = buildConfig.base + relPath + '?v=' +
-                                buildSettings.hash;
+                                buildSettings.buildHash;
 
                         // this.#header.addTag_PostBody(groupId, 'script', {
                         //     src: uri,
                         //     // type: 'text/javascript',
                         // }, '');
-                        this.#header.addScriptUri_PostBody(groupId, uri);
+                        let groupId_Header = `js.${type}.${groupId}`;
+                        this.#header.addScriptUri_PostBody(groupId_Header, uri);
             
                         this.console.log('    - ' + relPath);
                     }
@@ -310,7 +321,7 @@ export default class JSExt extends Ext {
         if ('include' in config) {
             let fsPaths = [];
             for (let fsPath of config.include)
-                fsPaths.push(path.join(this.#configPath, fsPath));
+                fsPaths.push(path.resolve(fsPath));
 
             if (this.builder.isType('dev'))
                 this.watch('include', [ 'add', 'unlink' ], fsPaths);
@@ -321,7 +332,7 @@ export default class JSExt extends Ext {
         if ('compile' in config) {
             let fsPaths = [];
             for (let fsPath of config.compile)
-                fsPaths.push(path.join(this.#configPath, fsPath));
+                fsPaths.push(path.resolve(fsPath));
 
             if (this.builder.isType('dev'))
                 this.watch('compile', [ 'add', 'unlink' ], fsPaths);
@@ -332,7 +343,7 @@ export default class JSExt extends Ext {
         if ('paths' in config) {
             let fsPaths = [];
             for (let fsPath of config.paths)
-                fsPaths.push(path.join(this.#configPath, fsPath));
+                fsPaths.push(path.resolve(fsPath));
 
             if (this.builder.isType('dev'))
                 this.watch('compile', [ 'add', 'unlink' ], fsPaths);

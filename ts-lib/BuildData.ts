@@ -18,6 +18,10 @@ export default class BuildData {
         return this.#settings.config.dev;
     }
 
+    get initFSPath(): string {
+        return this.#settings.initDir;
+    }
+
 
     constructor(build: BuildSettings) {
         this.#settings = build;

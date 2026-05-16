@@ -138,11 +138,17 @@ export default abstract class Ext {
     uri(fsPath: string, addHash: boolean = true) {
         let settings = this.#builder.settings;
 
-        let relativePath = path.relative(settings.config.index, 
-                fsPath);
-        let uri = relativePath.replace(/\\/g, '/');
-        return settings.config.base +  uri + (addHash ?
-                `?v=${settings.hash}` : '');
+        let relativePath = null;
+        try {
+            relativePath = path.relative(settings.config.index, 
+                    fsPath).replace(/\\/g, '/');
+        } catch (e) {
+            this.console.error((e as Error).toString());
+            return '#';
+        }
+        
+        return settings.config.base + relativePath + (addHash ?
+                `?v=${settings.buildHash}` : '');
     }
 
     uses(extName: string): Ext {

@@ -23,7 +23,7 @@ export default class Groups<ValueType> {
             group.before = group.before.concat(props.before);
 
         if (props.after !== undefined)
-           group.after = group.after.concat(props.after);
+            group.after = group.after.concat(props.after);
     }
 
     addValue(groupId: string, value: ValueType) {
@@ -66,9 +66,6 @@ export default class Groups<ValueType> {
             // console.log('Inserting', groupId);
             
             for (let i = 0; i < sortedGroups.size; i++) {
-                // console.log('before', sortedGroups.getAt(i).before);
-                // console.log('after', group.after, sortedGroups.getKeyAt(i));
-
                 if (sortedGroups.getAt(i).before.includes(groupId) ||
                         group.after.includes(sortedGroups.getKeyAt(i)))
                     insertIndex_Min = i + 1;
@@ -81,7 +78,7 @@ export default class Groups<ValueType> {
                     throw new Error(`before/after inconsistency in group.`);
             }
 
-            sortedGroups.addAt(insertIndex_Min, groupId, group);
+            sortedGroups.addAt(insertIndex_Max, groupId, group);
         }
 
         let groupValues = new Map();

@@ -7,6 +7,6 @@ export default (build: BuildData): BuildData => {
         .init(abLock)
         .init(js0)
         .extendObject(build.data['js-libs'].libs, {
-            'ab-build.database-native': build.devFSPath + '/node_modules/ab-build.database-native/js-lib',
+            'ab-database-native': build.devFSPath + '/node_modules/ab-database-native/js-lib',
         });
 }

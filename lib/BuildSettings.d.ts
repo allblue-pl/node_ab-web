@@ -5,10 +5,11 @@ export default class BuildSettings {
     #private;
     get config(): ConfigSettings;
     get exts(): Array<typeof Ext>;
-    get hash(): string;
+    get buildHash(): string;
     get initDir(): string;
     get initFns(): Array<InitFn>;
     get type(): "dev" | "rel";
     constructor(preset: BuildPreset, buildType: "dev" | "rel");
+    refreshBuildHash(): void;
 }
 //# sourceMappingURL=BuildSettings.d.ts.map

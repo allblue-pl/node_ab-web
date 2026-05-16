@@ -34,7 +34,7 @@ export default class Builder {
         this.#exts = new Map();
 
         this.#tasker = new Tasker();
-        this.#tasker.setWaitTime(this.#buildSettings.type === "rel" ? 5000 : 100);
+        this.#tasker.setWaitTime(this.#buildSettings.type === "rel" ? 500 : 100);
         this.#tasks_BuildEnd = this.#createTask_BuildEnd();
         this.#tasks_Parse = this.#createTask_Parse();
     }
@@ -62,6 +62,20 @@ export default class Builder {
         this.#initExts();
 
         this.#tasker.call(this.#tasks_Parse, undefined);
+
+        setInterval(() => {
+            let activeTasks = this.#tasker.getActiveTaskNames();
+
+            if (activeTasks.executing.length > 0) {
+                let executingTasks = activeTasks.executing.join(', ');
+                console.log('Executing tasks:', executingTasks);
+            }
+
+            if (activeTasks.waiting.length > 0) {
+                let waitingTasks = activeTasks.waiting.join(',');
+                console.log('Waiting tasks:', waitingTasks);
+            }
+        }, 5000);
     }
 
 
@@ -84,7 +98,7 @@ export default class Builder {
     }
 
     #createTask_BuildEnd(): Task<undefined> {
-        return new Task('build', (argsArr) => {
+        return new Task('buildEnd', (argsArr) => {
             abLog.success('Build finished.');
             return true;
                 })
@@ -105,8 +119,10 @@ export default class Builder {
             this.#exts.set(ext.name, ext);
         }
 
-        for (let [ extName, ext ] of this.#exts)
+        for (let [ extName, ext ] of this.#exts) {
             ext.init();
+            console.log(`${extName} initialized.`);
+        }
     }
 
     #parse(): void {

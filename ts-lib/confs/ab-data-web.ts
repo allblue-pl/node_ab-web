@@ -7,6 +7,6 @@ export default (build: BuildData): BuildData => {
         .init(js0)
         .init(webABApi)
         .extendObject(build.data['js-libs'].libs, {
-            'ab-build.data-web': build.devFSPath + '/node_modules/ab-build.data-web/js-lib',
+            'ab-data-web': build.devFSPath + '/node_modules/ab-data-web/js-lib',
         });
 }

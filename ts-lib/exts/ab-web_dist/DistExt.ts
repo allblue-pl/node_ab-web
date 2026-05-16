@@ -1,18 +1,9 @@
-'use strict';
-
+import path from "node:path";
 import type Builder from "../../Builder.ts";
 import Ext from "../../Ext.ts";
 import type { ChangeInfos, ExtConfigPreset } from "../../ts-types.ts";
-
-const fs = require('fs');
-const path = require('path');
-
-const abFS = require('ab-fs');
-const abWeb = require('../../.');
-const chalk = require('chalk');
-
-// const abFS = require('ab-fs');
-
+import abFS from "ab-fs";
+import fs from "node:fs";
 
 export default class DistExt extends Ext {
     #path: string;

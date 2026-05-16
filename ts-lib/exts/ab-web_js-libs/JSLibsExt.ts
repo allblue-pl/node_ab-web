@@ -70,10 +70,12 @@ export default class JSLibsExt extends Ext {
 
             try {
                 script = babel.transform(code, {
-                    presets: [ [require('@babel/preset-env'), {
-                        useBuiltIns: 'entry',
-                        corejs: 3,
-                    }], ],
+                    presets: [ 
+                        [ "@babel/preset-env", {
+                            useBuiltIns: 'entry',
+                            corejs: 3,
+                        }], 
+                    ],
                     filename: filename,
                     sourceFileName: filename,
                     sourceMaps: true,
@@ -115,7 +117,7 @@ export default class JSLibsExt extends Ext {
 
 
     /* abWeb.Ext Overrides */
-    __build(): Promise<boolean> {
+    async __build(): Promise<boolean> {
         this.console.info('Building...');
 
         let buildPromises: Array<Promise<boolean>> = [];
@@ -128,18 +130,18 @@ export default class JSLibsExt extends Ext {
         }
         this.#scriptsToBuild = [];
 
-        return Promise.all(buildPromises)
-            .then((values) => {
-                for (let value of values) {
-                    if (!value)
-                        return false;
-                }
+        let values = await Promise.all(buildPromises);
+        for (let value of values) {
+            if (!value)
+                return false;
+        }
 
-                if (!this.builder.isType('rel') && buildJS)
-                    this.#js.build();
+        if (!this.builder.isType('rel') && buildJS)
+            this.#js.build();
+        else
+            this.#js.buildHeader();
 
-                return true;
-            });
+        return true;
     }
 
     __getName(): string {
@@ -183,7 +185,7 @@ export default class JSLibsExt extends Ext {
 
         this.#buildPath = path.join(buildConfig.tmp, config.build.dev);
 
-        let scriptPath = path.join(buildSettings.initDir, config.path);
+        let scriptPath = config.path; // path.join(buildSettings.initDir, config.path);
 
         if (!fs.existsSync(scriptPath)) {
             this.console.error(`'path' in config does not exist: '${config.path}'.`);
@@ -195,8 +197,7 @@ export default class JSLibsExt extends Ext {
 
         // let libs = config.libs;
         for (let libName in config.libs) {
-            this.addLib(libName, path.join(buildSettings.initDir, 
-                    config.libs[libName]));
+            this.addLib(libName, config.libs[libName]);
         }
 
         this.#js.clearScriptsGroup('js-libs');

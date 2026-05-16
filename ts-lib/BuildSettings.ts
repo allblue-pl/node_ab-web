@@ -18,7 +18,7 @@ export default class BuildSettings {
         return this.#preset.exts;
     }
 
-    get hash(): string {
+    get buildHash(): string {
         return this.#hash;
     }
 
@@ -39,6 +39,10 @@ export default class BuildSettings {
         this.#config = new ConfigSettings(preset.config, preset.initDir);
         this.#hash = this.#generateHash();
         this.#preset = preset;
+    }
+
+    refreshBuildHash(): void {
+        this.#hash = this.#generateHash();
     }
 
 
