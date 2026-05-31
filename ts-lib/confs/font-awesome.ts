@@ -11,4 +11,4 @@ export default (build: BuildData): BuildData => {
         .extArr(build.data['dist']['paths'], [
             build.devFSPath + '/git/Font-Awesome/webfonts/**',
         ]);
-}
+}                                                                                                                                                                                                            

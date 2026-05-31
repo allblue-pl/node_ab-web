@@ -1,9 +1,10 @@
+import anymatch from "anymatch";
 import path from "node:path";
 import type Builder from "../../Builder.ts";
 import Ext from "../../Ext.ts";
 import Groups from "../../Groups.ts";
 import type HeaderExt from "../ab-web_header/HeaderExt.ts";
-import abFS from "ab-fs";
+import abFS, { abFSMatcher } from "ab-fs";
 import fs from "node:fs";
 import uglifyJS from "uglify-js";
 import babel from "@babel/core"
@@ -19,6 +20,7 @@ export default class JSExt extends Ext {
     #scriptPath: string;
     #scriptsGroups_Compile: Groups<string>;
     #scriptsGroups_Include: Groups<string>;
+    #watchedFSPaths: {"include": Array<string>, "compile": Array<string>};
 
     constructor(builder: Builder) {
         super(builder);
@@ -48,6 +50,11 @@ export default class JSExt extends Ext {
         this.#scriptPath = path.join(buildConfig.tmp, 'js', 'script.js');
         this.#scriptPath_Min = path.join(buildConfig.front, 'js', 'script.min.js');
         this.#scriptPath_Map = path.join(buildConfig.front, 'js', 'script.min.js.map');
+
+        this.#watchedFSPaths = {
+            "include": [],
+            "compile": [],
+        };
     }
 
     addScript(groupId: string, scriptPath: string, type: "compile"|"include" = "compile"): void {
@@ -102,6 +109,46 @@ export default class JSExt extends Ext {
         this.getScriptsGroups(type).removeValue(groupId, (value) => {
             return value === scriptPath;
         });
+    }
+
+
+    #sortScriptPaths(fsPaths: Array<string>, watchedFSPaths: Array<string>): 
+            Array<string> {
+        let fsPaths_Helper: Array<{fsPath: string, order: number}> = [];
+        for (let fsPath of fsPaths) {
+            let matched = false;
+            for (let i = 0; i < watchedFSPaths.length; i++) {
+                if (anymatch([ watchedFSPaths[i].replaceAll("\\", "/") ], 
+                        fsPath.replaceAll("\\", "/"))) {
+                    fsPaths_Helper.push({
+                        order: i,
+                        fsPath: fsPath,
+                    });
+                    matched = true;
+                    break;
+                }
+            }
+            if (!matched) {
+                // this.console.warn(`FS Path '${fsPath}' not matched.`);
+                fsPaths_Helper.push({
+                    order: Number.MAX_SAFE_INTEGER,
+                    fsPath: fsPath,
+                });
+            }
+        }
+
+        fsPaths_Helper = fsPaths_Helper.sort((a, b) => {
+            if (a.order === b.order)
+                return a.fsPath.localeCompare(b.fsPath);
+
+            return a.order - b.order;
+        });
+
+        let fsPaths_Sorted: Array<string> = [];
+        for (let fsPathInfo of fsPaths_Helper)
+            fsPaths_Sorted.push(fsPathInfo.fsPath);
+
+        return fsPaths_Sorted;
     }
 
 
@@ -234,6 +281,8 @@ export default class JSExt extends Ext {
                 let scriptGroups = this.getScriptsGroups(type).getValues();
                 for (let [ groupId, scriptPaths ] of scriptGroups) {
                     this.console.info('    - ' + groupId);
+                    scriptPaths = this.#sortScriptPaths(scriptPaths, 
+                            this.#watchedFSPaths[type]);
                     for (let fsPath of scriptPaths) {
                         let relPath = null;
                         try {
@@ -279,13 +328,16 @@ export default class JSExt extends Ext {
                     continue;
 
                 for (let changeInfo of changeInfos[type]) {
-                    if (changeInfo.eventType === "add") {
-                        this.addScript('js', changeInfo.fsPath, type);
-                        build = true;
-                    }
-                    else if (changeInfo.eventType === "unlink") {
-                        this.removeScript('js', changeInfo.fsPath, type);
-                        build = true;
+                    for (let i = changeInfo.eventTypes.length - 1; i >= 0; i--) {
+                        if (changeInfo.eventTypes.includes("unlink")) {
+                            this.removeScript('js', changeInfo.fsPath, type);
+                            build = true;
+                            break;
+                        } else if (changeInfo.eventTypes.includes("add")) {
+                            this.addScript('js', changeInfo.fsPath, type);
+                            build = true;
+                            break;
+                        }
                     }
                 }
             }
@@ -319,25 +371,29 @@ export default class JSExt extends Ext {
         // });
 
         if ('include' in config) {
-            let fsPaths = [];
-            for (let fsPath of config.include)
-                fsPaths.push(path.resolve(fsPath));
+            let watchFSPaths = [];
+            for (let watchFSPath of config.include)
+                watchFSPaths.push(path.resolve(watchFSPath));
 
             if (this.builder.isType('dev'))
-                this.watch('include', [ 'add', 'unlink' ], fsPaths);
+                this.watch('include', [ 'add', 'unlink' ], watchFSPaths);
             else if (this.builder.isType('rel'))
-                this.watch('include', [ 'add', 'unlink', 'change' ], fsPaths);
+                this.watch('include', [ 'add', 'unlink', 'change' ], watchFSPaths);
+            
+            this.#watchedFSPaths["include"] = watchFSPaths;
         }
 
         if ('compile' in config) {
-            let fsPaths = [];
-            for (let fsPath of config.compile)
-                fsPaths.push(path.resolve(fsPath));
+            let watchFSPaths = [];
+            for (let watchFSPath of config.compile)
+                watchFSPaths.push(path.resolve(watchFSPath));
 
             if (this.builder.isType('dev'))
-                this.watch('compile', [ 'add', 'unlink' ], fsPaths);
+                this.watch('compile', [ 'add', 'unlink' ], watchFSPaths);
             else if (this.builder.isType('rel'))
-                this.watch('compile', [ 'add', 'unlink', 'change' ], fsPaths);
+                this.watch('compile', [ 'add', 'unlink', 'change' ], watchFSPaths);
+
+            this.#watchedFSPaths["compile"] = watchFSPaths;
         }
 
         if ('paths' in config) {

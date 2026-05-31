@@ -98,7 +98,8 @@ export default class JSLibsExt extends Ext {
             let builtFSPath = await wb.buildScript_Async(scriptInfo.scriptPath, 
                     false);
 
-            if (scriptInfo.eventType !== 'change')
+            if (scriptInfo.eventTypes.includes("add") && scriptInfo
+                    .eventTypes[scriptInfo.eventTypes.length - 1] !== "unlink")
                 this.#js.addScript(`js-libs.${scriptInfo.libName}`, builtFSPath);
 
             let relScriptPath = path.relative(this.builder.settings.config.index, 
@@ -123,7 +124,8 @@ export default class JSLibsExt extends Ext {
         let buildPromises: Array<Promise<boolean>> = [];
         let buildJS: boolean = false;
         for (let scriptInfo of this.#scriptsToBuild) {
-            if (scriptInfo.eventType !== 'change')
+            if (!scriptInfo.eventTypes.includes("add") && 
+                    !scriptInfo.eventTypes.includes("unlink"))
                 buildJS = true;
 
             buildPromises.push(this.#createScript_Async(scriptInfo));
@@ -155,6 +157,8 @@ export default class JSLibsExt extends Ext {
                 for (let scriptInfo of this.#scriptsToBuild) {
                     if (changeInfo.fsPath === scriptInfo.scriptPath) {
                         scriptToBuildFound = true;
+                        for (let eventType of changeInfo.eventTypes)
+                            scriptInfo.eventTypes.push(eventType);
                         break;
                     }
                 }
@@ -163,7 +167,7 @@ export default class JSLibsExt extends Ext {
                     this.#scriptsToBuild.push({
                         libName: libName,
                         scriptPath: changeInfo.fsPath,
-                        eventType: changeInfo.eventType,
+                        eventTypes: changeInfo.eventTypes,
                     });
                 }
             }

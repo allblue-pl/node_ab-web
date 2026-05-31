@@ -15,7 +15,7 @@ export type ChalkColor = "cyan"|"green"|"red"|"yellow"|"redBright";
 
 export type ChangeInfo = {
     "fsPath": string,
-    "eventType": WatchEventType,
+    "eventTypes": Array<WatchEventType>,
 };
 
 export type ChangeInfos = {[watcherName: string]: Array<ChangeInfo>};

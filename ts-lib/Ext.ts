@@ -8,7 +8,6 @@ import type ConfigSettings from "./ConfigSettings.ts";
 import type { ChalkColor, ChangeInfo, ChangeInfos, TaskArgs_OnChange } from "./ts-types.ts";
 import type { WatchEventType } from "ab-fs-watcher/lib/ts-types.js";
 
-
 export default abstract class Ext {
     #builder: Builder;
     #console: ExtConsole;
@@ -70,17 +69,21 @@ export default abstract class Ext {
                 if (!(args.watcherName in changes))
                     changes[args.watcherName] = [];
 
-                for (let i = changes[args.watcherName].length - 1; i >= 0; i--) {
-                    if (args.fsPath === changes[args.watcherName][i].fsPath) {
-                        changes[args.watcherName].splice(i, 1);
+                let fsPath_Exists = false;
+                for (let changeInfo of changes[args.watcherName]) {
+                    if (args.fsPath === changeInfo.fsPath) {
+                        changeInfo.eventTypes.push(args.eventType);
+                        fsPath_Exists = true;
                         break;
                     }
                 }
 
-                changes[args.watcherName].push({
-                    fsPath: args.fsPath,
-                    eventType: args.eventType,
-                });
+                if (!fsPath_Exists) {
+                    changes[args.watcherName].push({
+                        fsPath: args.fsPath,
+                        eventTypes: [ args.eventType ],
+                    });
+                }
             }
 
             return this.__onChange(changes);

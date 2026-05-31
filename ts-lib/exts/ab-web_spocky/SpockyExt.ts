@@ -170,7 +170,8 @@ export default class SpockyExt extends Ext {
 
         if ('layouts' in changeInfos) {
             for (let changeInfo of changeInfos.layouts) {
-                if (changeInfo.eventType === "unlink")
+                if (changeInfo.eventTypes[changeInfo.eventTypes.length - 1] === 
+                        "unlink")
                     continue;
 
                 this.#layoutPaths_ToBuild.push(changeInfo.fsPath);
@@ -179,7 +180,7 @@ export default class SpockyExt extends Ext {
 
         if ('packages' in changeInfos) {
             for (let changeInfo of changeInfos.packages) {
-                if (changeInfo.eventType === "unlink")
+                if (changeInfo.eventTypes[changeInfo.eventTypes.length - 1] === "unlink")
                     continue;
 
                 let packageName = path.basename(changeInfo.fsPath);                
