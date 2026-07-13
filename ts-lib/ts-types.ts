@@ -32,6 +32,8 @@ export type ConfigPreset = {
 
 export type ExtConfigPreset = {[key:string]: any};
 
+export type ExtInit = (build: BuildData) => BuildData;
+
 export type GroupsInfos<ValueType> = {
     after: Array<string>;
     before: Array<string>;

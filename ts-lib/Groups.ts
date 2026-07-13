@@ -1,21 +1,20 @@
+import type { Value } from "sass";
 import type Ext from "./Ext.ts";
 import type { GroupsInfos, GroupsProps } from "./ts-types.ts";
-import { List } from "@allblue/ts0";
+import { TS0List } from "@allblue/ts0";
 
 export default class Groups<ValueType> {
     #ext: Ext;
-    #groups: List<string, GroupsInfos<ValueType>>;
+    #groups: TS0List<string, GroupsInfos<ValueType>>;
 
     constructor(ext: Ext) {
         this.#ext = ext;
-        this.#groups = new List();
+        this.#groups = new TS0List();
     }
 
-    add(groupId: string, props: GroupsProps<ValueType>) {
+    add(groupId: string, props: GroupsProps<ValueType>): void {
         if (!this.#groups.has(groupId))
             this.#groups.set(groupId, { values: [], before: [], after: [] });
-        else
-            this.#ext.console.warn(`Tag group '${groupId}' already exists.`);
 
         let group = this.#groups.get(groupId);
 
@@ -26,7 +25,7 @@ export default class Groups<ValueType> {
             group.after = group.after.concat(props.after);
     }
 
-    addValue(groupId: string, value: ValueType) {
+    addValue(groupId: string, value: ValueType): void {
         let group = this.#groups.get(groupId);
         if (group === undefined)
             throw new Error(`Group '${groupId}' does not exist.`);
@@ -34,7 +33,7 @@ export default class Groups<ValueType> {
         group.values.push(value);
     }
 
-    clear(groupId: string) {
+    clear(groupId: string): void {
         let group = this.#groups.get(groupId);
         if (group === undefined)
             throw new Error(`Group '${groupId}' does not exist.`);
@@ -42,7 +41,7 @@ export default class Groups<ValueType> {
         group.values = [];
     }
 
-    getGroup(groupId: string) {
+    getGroup(groupId: string): Array<ValueType> {
         let group = this.#groups.get(groupId);
         if (group === undefined)
             throw new Error(`Group '${groupId}' does not exist.`);
@@ -50,7 +49,7 @@ export default class Groups<ValueType> {
         return group.values;
     }
 
-    getGroupIds() {
+    getGroupIds(): Array<string> {
         let groupIds = [];
         for (let [ groupId, _group ] of this.#groups)
             groupIds.push(groupId);
@@ -58,8 +57,8 @@ export default class Groups<ValueType> {
         return groupIds;
     }
 
-    getValues() {
-        let sortedGroups: List<string, GroupsInfos<ValueType>> = new List();
+    getValues(): Map<string, Array<ValueType>> {
+        let sortedGroups: TS0List<string, GroupsInfos<ValueType>> = new TS0List();
         for (let [ groupId, group ] of this.#groups) {
             let insertIndex_Min = 0;
             let insertIndex_Max = sortedGroups.size;
@@ -89,7 +88,7 @@ export default class Groups<ValueType> {
         return groupValues;
     }
 
-    getValues_AsArray(): Array<string> {
+    getValues_AsArray(): Array<ValueType> {
         let valuesMap = this.getValues();
         let valuesArr = [];
         for (let [ groupId, groupValues] of valuesMap) {
@@ -100,7 +99,7 @@ export default class Groups<ValueType> {
         return valuesArr;
     }
 
-    has(groupId: string) {
+    has(groupId: string): boolean {
         return this.#groups.has(groupId);
     }
 

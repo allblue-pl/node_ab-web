@@ -2,20 +2,24 @@ import abFS from "ab-fs";
 import fs from "node:fs";
 import path from "node:path";
 import type Builder from "../../Builder.ts";
-import Ext from "../../Ext.ts";
+import Ext, { ExtPrinter } from "../../Ext.ts";
 import type { ChangeInfos, ExtConfigPreset } from "../../ts-types.ts";
 
 export default class CopyExt extends Ext {
     #config: {[key:string]: any}|null;
 
+    #print_Copied: Array<string>;
+
     constructor(builder: Builder) {
         super(builder);
         this.#config = null;
+        this.#print_Copied = [];
     }
 
 
     /* abWeb.Ext Overrides */
-    __build() {
+    __build(): boolean {
+        this.#print_Copied = [];
         if (this.#config === null)
             return false;
         if (!('paths' in this.#config))
@@ -29,7 +33,7 @@ export default class CopyExt extends Ext {
                     fsPaths[1]);
 
             abFS.copySync(fsPaths[0], distPath);
-            this.console.log('Copied:', srcRelPath, distRelPath);
+            this.#print_Copied.push('Copied: ' + srcRelPath + " -> " + distRelPath);
         }
 
         return true;
@@ -81,6 +85,11 @@ export default class CopyExt extends Ext {
         }
         
         return true;
+    }
+
+    __printLogs(printer: ExtPrinter): void {
+        for (let print of this.#print_Copied)
+            printer.log(print);
     }
     /* / abWeb.Ext Overrides */
 

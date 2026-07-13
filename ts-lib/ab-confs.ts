@@ -1,3 +1,4 @@
+import type BuildData from "./BuildData.ts";
 import abBootstrapDatetimepicker from "./confs/ab-bootstrap-datetimepicker.ts";
 import abBootstrap from "./confs/ab-bootstrap.ts";
 import abCookies from "./confs/ab-cookies.ts";
@@ -22,6 +23,7 @@ import abTime from "./confs/ab-time.ts";
 import abTimer from "./confs/ab-timer.ts";
 import abWebScroller from "./confs/ab-web-scroller.ts";
 import eSpkLemonBee from "./confs/e-spk-lemon-bee.ts";
+import eLibs from "./confs/e-libs.ts";
 import eTasks from "./confs/e-tasks.ts";
 import fontAwesome from "./confs/font-awesome.ts";
 import jquery from "./confs/jquery.ts";
@@ -36,122 +38,127 @@ import spkTables from "./confs/spk-tables.ts";
 import spkTinymce from "./confs/spk-tinymce.ts";
 import spocky from "./confs/spocky.ts";
 import webABApi from "./confs/web-ab-api.ts";
+import type Ext from "./Ext.ts";
+import type { ExtInit } from "./ts-types.ts";
 
 export class abConfs_Class {
-    get abBootstrapDatetimepicker() {
+    get abBootstrapDatetimepicker(): ExtInit {
         return abBootstrapDatetimepicker;
-    }; 
-    get abBootstrap() {
+    } 
+    get abBootstrap(): ExtInit {
         return abBootstrap;
-    };
-    get abCookies() {
+    }
+    get abCookies(): ExtInit {
         return abCookies;
-    };
-    get abDataNative() {
+    }
+    get abDataNative(): ExtInit {
         return abDataNative;
-    };
-    get abDataWeb() {
+    }
+    get abDataWeb(): ExtInit {
         return abDataWeb;
-    };
-    get abData() {
+    }
+    get abData(): ExtInit {
         return abData;
-    };
-    get abDatabaseNative() {
+    }
+    get abDatabaseNative(): ExtInit {
         return abDatabaseNative;
-    };
-    get abDate() {
+    }
+    get abDate(): ExtInit {
         return abDate;
-    };
-    get abFields() {
+    }
+    get abFields(): ExtInit {
         return abFields;
-    };
-    get abGallery() {
+    }
+    get abGallery(): ExtInit {
         return abGallery;
-    };
-    get abLayouts() {
+    }
+    get abLayouts(): ExtInit {
         return abLayouts;
-    };
-    get abLock() {
+    }
+    get abLock(): ExtInit {
         return abLock;
-    };
-    get abNative() {
+    }
+    get abNative(): ExtInit {
         return abNative;
-    };
-    get abNodes() {
+    }
+    get abNodes(): ExtInit {
         return abNodes;
-    };
-    get abPager() {
+    }
+    get abPager(): ExtInit {
         return abPager;
-    };
-    get abQrCodesGenerator() {
+    }
+    get abQrCodesGenerator(): ExtInit {
         return abQrCodesGenerator;
-    };
-    get abResourcePreloader() {
+    }
+    get abResourcePreloader(): ExtInit {
         return abResourcePreloader;
-    };
-    get abStrings() {
+    }
+    get abStrings(): ExtInit {
         return abStrings;
-    };
-    get abTextParser() {
+    }
+    get abTextParser(): ExtInit {
         return abTextParser;
-    };
-    get abText() {
+    }
+    get abText(): ExtInit {
         return abText;
-    };
-    get abTime() {
+    }
+    get abTime(): ExtInit {
         return abTime;
-    };
-    get abTimer() {
+    }
+    get abTimer(): ExtInit {
         return abTimer;
-    };
-    get abWebScroller() {
+    }
+    get abWebScroller(): ExtInit {
         return abWebScroller;
-    };
-    get eSpkLemonBee() {
+    }
+    get eSpkLemonBee(): ExtInit {
         return eSpkLemonBee;
-    };
-    get eTasks() {
+    }
+    get eLibs(): (build: BuildData, espadaFSPath: string) => BuildData {
+        return eLibs;
+    }
+    get eTasks(): ExtInit {
         return eTasks;
-    };
-    get fontAwesome() {
+    }
+    get fontAwesome(): ExtInit {
         return fontAwesome;
-    };
-    get jquery() {
+    }
+    get jquery(): ExtInit {
         return jquery;
-    };
-    get js0() {
+    }
+    get js0(): ExtInit {
         return js0;
-    };
-    get moment() {
+    }
+    get moment(): ExtInit {
         return moment;
-    };
-    get sortablejs() {
+    }
+    get sortablejs(): ExtInit {
         return sortablejs;
-    };
-    get spkFileUpload() {
+    }
+    get spkFileUpload(): ExtInit {
         return spkFileUpload;
-    };
-    get spkForms() {
+    }
+    get spkForms(): ExtInit {
         return spkForms;
-    };
-    get spkLemonBee() {
+    }
+    get spkLemonBee(): ExtInit {
         return spkLemonBee;
-    };
-    get spkMessages() {
+    }
+    get spkMessages(): ExtInit {
         return spkMessages;
-    };
-    get spkTables() {
+    }
+    get spkTables(): ExtInit {
         return spkTables;
-    };
-    get spkTinymce() {
+    }
+    get spkTinymce(): ExtInit {
         return spkTinymce;
-    };
-    get spocky() {
+    }
+    get spocky(): ExtInit {
         return spocky;
-    };
-    get webABApi() {
+    }
+    get webABApi(): ExtInit {
         return webABApi;
-    };
+    }
 
     constructor() {
         

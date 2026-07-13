@@ -1,6 +1,6 @@
 import path from "node:path";
 import type Builder from "../../Builder.ts";
-import Ext from "../../Ext.ts";
+import Ext, { ExtPrinter } from "../../Ext.ts";
 import type { ChangeInfos, ExtConfigPreset } from "../../ts-types.ts";
 import abFS from "ab-fs";
 import fs from "node:fs";
@@ -8,10 +8,13 @@ import fs from "node:fs";
 export default class DistExt extends Ext {
     #path: string;
 
+    #print_Copied: Array<string>;
+
     constructor(builder: Builder) { 
         super(builder);
 
         this.#path = builder.settings.config.dist;
+        this.#print_Copied = [];
     }
 
 
@@ -27,12 +30,19 @@ export default class DistExt extends Ext {
                     fsPath);
             let distPath = path.join(this.#path, fileRelPath);
 
-            let distDirPath = path.dirname(distPath);
-            if (!fs.existsSync(distDirPath))
-                abFS.mkdirRecursiveSync(distDirPath);
-            fs.copyFile(fsPath, distPath, () => {
-                this.console.log('Copied:', fileRelPath);
-            });
+            if (onChangeInfo.eventTypes.at(-1) === "unlink") {
+                if (fs.existsSync(distPath))
+                    fs.unlinkSync(distPath);
+                let i = this.#print_Copied.indexOf(fileRelPath);
+                if (i !== -1)
+                    this.#print_Copied.splice(i, 1);
+            } else {
+                let distDirPath = path.dirname(distPath);
+                if (!fs.existsSync(distDirPath))
+                    abFS.mkdirRecursiveSync(distDirPath);
+                fs.copyFileSync(fsPath, distPath);
+                this.#print_Copied.push(fileRelPath);
+            }
         }
 
         return true;
@@ -61,6 +71,12 @@ export default class DistExt extends Ext {
         // if (fs.existsSync(distPath))
         //     abFS.removeSync(distPath);
     // }
+
+    __printLogs(printer: ExtPrinter): void {
+        this.#print_Copied.sort();
+        for (let print of this.#print_Copied)
+            printer.log(`Copied: ${print}`);
+    }
     /* / abWeb.Ext Overrides */
 
 }

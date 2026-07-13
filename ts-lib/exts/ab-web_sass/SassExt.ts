@@ -3,7 +3,7 @@ import fs from "node:fs";
 import path from "node:path";
 import * as dartSass from "sass";
 import type Builder from "../../Builder.ts";
-import Ext from "../../Ext.ts";
+import Ext, { ExtPrinter } from "../../Ext.ts";
 import type { ChangeInfos, ExtConfigPreset } from "../../ts-types.ts";
 import type HeaderExt from "../ab-web_header/HeaderExt.ts";
 
@@ -13,7 +13,7 @@ export default class SassExt extends Ext {
     #distPath: string;
     #header: HeaderExt;
     #remapPaths: Array<[string, string]>;
-    #sourceDirPath: string;
+    #sourceUri_Base: string;
     #sourcePath_Base: string;
     #sourcePath: string;
     #sources: {[name:string]: string};
@@ -21,6 +21,8 @@ export default class SassExt extends Ext {
     #substyles: Array<string>;
     #variablesPaths: Array<string>;
     #variants: Array<string>;
+
+    #print_Errors: Array<string>;
 
     constructor(builder: Builder) {
         super(builder);
@@ -31,13 +33,11 @@ export default class SassExt extends Ext {
         this.#header = this.uses('header') as HeaderExt;
 
         this.#cssDir = path.join(buildConfig.front, 'css');
-        if (!abFS.dir.existsSync(this.#cssDir)) {
-            this.console.warn(`\`${this.#cssDir}\` does not exist. Creating...`);
+        if (!abFS.dir.existsSync(this.#cssDir))
             abFS.dir.createRecursiveSync(this.#cssDir);
-        }
 
         let relDir = path.relative(buildConfig.index, buildConfig.front);
-        this.#sourceDirPath = relDir;
+        this.#sourceUri_Base = relDir;
         this.#sourcePath_Base = path.join(this.#cssDir, 'sass');
         this.#sourcePath = path.join(this.#cssDir, 'sass.css');
 
@@ -54,10 +54,12 @@ export default class SassExt extends Ext {
                 .replace(/\\/g, '/');
         
         this.#remapPaths = [];
+
+        this.#print_Errors = [];
     }
 
 
-    #createCss(css: string, sourceAlias: string) {
+    #createCss(css: string, sourceAlias: string): void {
         let cssPath = path.join(this.#cssDir, sourceAlias === '_default' ?
                 'sass.css' : `sass-${sourceAlias}.css`);
 
@@ -114,8 +116,9 @@ export default class SassExt extends Ext {
         fs.writeFileSync(cssPath, relativeCss);
     }
 
-    #getSources(fsPaths: {[name:string]: Array<string>}): 
-            {[name:string]: string} {
+    #getSources(): {[name:string]: string} {
+        let fsPaths = this.getWatchedFSPaths();
+
         let sources: {[key:string]: string} = {
             '_default': '',
         };
@@ -126,112 +129,93 @@ export default class SassExt extends Ext {
             sources[substyle] = '';
         }
 
-        this.console.log('Variables:');
         for (let fsPath of fsPaths.variables) {
-            let relativePath = path.relative(this.#sourceDirPath, fsPath);
+            let relativePath = path.relative(this.#sourcePath_Base, fsPath);
             relativePath = relativePath.replace(/\\/g, '/');
 
-            sources['_default'] += '@import "{abWeb}' + relativePath + '";\r\n';
+            sources['_default'] += '@import "ab-web:' + fsPath.replace(/\\/g, '/') + '";\r\n';
             for (let variant of this.#variants) {
-                sources[variant] += '@import "{abWeb}' + relativePath + '";\r\n';
+                sources[variant] += '@import "ab-web:' + fsPath.replace(/\\/g, '/') + '";\r\n';
             }
-
-            this.console.log('    - ' + relativePath);
         }
 
         for (let variant of this.#variants) {
-            this.console.log('Variant: ' + variant);
-            
             for (let fsPath of fsPaths[`variants.${variant}.variables`]) {
-                let relativePath = path.relative(this.#sourceDirPath, fsPath);
+                let relativePath = path.relative(this.#sourcePath_Base, fsPath);
                 relativePath = relativePath.replace(/\\/g, '/');
 
-                sources[variant] += '@import "{abWeb}' + relativePath + '";\r\n';
-
-                this.console.log('    - ' + relativePath);
+                sources[variant] += '@import "ab-web:' + fsPath.replace(/\\/g, '/') + '";\r\n';
             }
         }
 
         for (let substyle of this.#substyles) {
-            this.console.log('Substyle: ' + substyle);
-            
             for (let fsPath of fsPaths[`substyles.${substyle}.variables`]) {
-                let relativePath = path.relative(this.#sourceDirPath, fsPath);
+                let relativePath = path.relative(this.#sourcePath_Base, fsPath);
                 relativePath = relativePath.replace(/\\/g, '/');
 
-                sources[substyle] += '@import "{abWeb}' + relativePath + '";\r\n';
-
-                this.console.log('    - ' + relativePath);
+                sources[substyle] += '@import "ab-web:' + fsPath.replace(/\\/g, '/') + '";\r\n';
             }
         }
         // sassSource += '\r\n';
 
-        this.console.log('Styles:');
         for (let fsPath of fsPaths.styles) {
             if (path.basename(fsPath) === 'variables.scss')
                 continue;
 
-            let relativePath = path.relative(this.#sourceDirPath, fsPath);
+            let relativePath = path.relative(this.#sourcePath_Base, fsPath);
             relativePath = relativePath.replace(/\\/g, '/');
+            let extraExt = '';
             if (path.extname(relativePath) === '.css')
-                relativePath += '-abWeb';
+                extraExt += "-ab-web";
 
-            sources['_default'] += '@import "{abWeb}' + relativePath + '";\r\n';
+            sources['_default'] += '@import "ab-web:' + fsPath.replace(/\\/g, '/') + extraExt + '";\r\n';
             for (let variant of this.#variants) {
-                sources[variant] += '@import "{abWeb}' + relativePath + '";\r\n';
+                sources[variant] += '@import "ab-web:' + fsPath.replace(/\\/g, '/') + extraExt + '";\r\n';
             }
-
-            this.console.log('    - ' + relativePath);
         }
 
         for (let variant of this.#variants) {
-            this.console.log('Variant: ' + variant);
-            
             for (let fsPath of fsPaths[`variants.${variant}.styles`]) {
                 if (path.basename(fsPath) === 'variables.scss')
                     continue;
 
-                let relativePath = path.relative(this.#sourceDirPath, fsPath);
+                let relativePath = path.relative(this.#sourcePath_Base, fsPath);
                 relativePath = relativePath.replace(/\\/g, '/');
+                let extraExt = '';
                 if (path.extname(relativePath) === '.css')
-                    relativePath += '-abWeb';
+                    extraExt += "-ab-web";
 
-                sources[variant] += '@import "{abWeb}' + relativePath + '";\r\n';
-
-                this.console.log('    - ' + relativePath);
+                sources[variant] += '@import "ab-web:' + fsPath.replace(/\\/g, '/') + extraExt + '";\r\n';
             }
         }
 
         for (let substyle of this.#substyles) {
-            this.console.log('Variant: ' + substyle);
-            
             for (let fsPath of fsPaths[`substyles.${substyle}.styles`]) {
                 if (path.basename(fsPath) === 'variables.scss')
                     continue;
 
-                let relativePath = path.relative(this.#sourceDirPath, fsPath);
+                let relativePath = path.relative(this.#sourcePath_Base, fsPath);
                 relativePath = relativePath.replace(/\\/g, '/');
+                let extraExt = '';
                 if (path.extname(relativePath) === '.css')
-                    relativePath += '-abWeb';
+                    extraExt += "-ab-web";
 
-                sources[substyle] += '@import "{abWeb}' + relativePath + '";\r\n';
-
-                this.console.log('    - ' + relativePath);
+                sources[substyle] += '@import "ab-web:' + fsPath.replace(/\\/g, '/') + extraExt + '";\r\n';
             }
         }
 
         return sources;
     }
 
-    #parseSource(url: string, prev: string, done: (result: {"contents": string}) => void) {
-        if (url.indexOf('{abWeb}') === 0) {
-            url = url.substring('{abWeb}'.length);
-        }
+    #parseSource(url: string, origin: string): string {
+        if (url.indexOf('ab-web:') === 0)
+            url = url.substring('ab-web:'.length);
 
-        if (path.extname(url) === '.css-abWeb')
-            url = url.substring(0, url.length - '-abWeb'.length);
+        if (path.extname(url) === '.css-ab-web')
+            url = url.substring(0, url.length - '-ab-web'.length);
 
-        let urlPath = path.join(this.#sourceDirPath, url);
+        // let urlPath = path.join(this.#sourceUri_Base, url);
+        let urlPath = url;
         if (path.extname(urlPath) !== '.scss' && path.extname(urlPath) !== '.css')
             urlPath += '.scss';
 
@@ -242,22 +226,15 @@ export default class SassExt extends Ext {
             urlPath = path.join(urlPath_Dir, '_' + urlPath_Base);
 
         if (!fs.existsSync(urlPath)) {
-            this.console.error(`File '${url}' imported in '${prev}' does not exist.`);
-            done({ contents: '' });
-            return;
+            this.#print_Errors.push(`File '${url}' imported in '${origin}' does not exist.`);
+            return "";
         }
 
-        fs.readFile(urlPath, (err, data) => {
-            if (err) {
-                this.console.error('Cannot read file: ', url);
-                done({ contents: '' });
-                return;
-            }
-     
-            let sass = data.toString();
-
-            sass = sass.replace(/@import\s*([\'"])\s*/g, '@import $1' + 
-                    path.dirname(url) + '/');
+        try {
+            let sass = fs.readFileSync(urlPath).toString();
+            
+            // sass = sass.replace(/@import\s*([\'"])\s*/g, '@import $1' + 
+            //         path.dirname(url) + '/');
 
             let relativeSass = '';
 
@@ -290,71 +267,108 @@ export default class SassExt extends Ext {
             }
             relativeSass += sass.substring(regexIndex, sass.length);
 
-            done({ contents: relativeSass });
-        });
+            return relativeSass;
+        } catch(err: any) {
+            this.#print_Errors.push('Cannot read file: ', url);
+            this.#print_Errors.push((err as Error).toString());
+            return "";
+        }
     }
 
 
     /* abWeb.Ext Overrides */
-    async __build(): Promise<boolean> {
-        this.console.log("Building...");
+    __build(): boolean {
+        this.#print_Errors = [];
 
-        let promises: Array<Promise<boolean>> = [];
         for (let sourceAlias in this.#sources) {
             let sourcePath = sourceAlias === '_default' ? 
                     this.#sourcePath : (this.#sourcePath_Base + '-' + 
                     sourceAlias + '.css');
 
-            promises.push(new Promise((resolve, reject) => {
-                dartSass.render({
-                    data: this.#sources[sourceAlias],
-                    file: sourcePath,
-                    includePaths: [ this.#sourceDirPath ],
-                    importer: (url, prev, done) => {                    
-                        return this.#parseSource(url, prev, done);
-                    },
-                    outputStyle: this.builder.isType('rel') ? 'compressed' : 'expanded',
+            try {
+                let result = dartSass.compileString(this.#sources[sourceAlias], {
+                    importers: [
+                        {
+                            canonicalize: (url, context) => {
+                                if (!url.startsWith('ab-web:'))
+                                    return null;
+
+                                return new URL(url);
+                            },
+                            load: (canonicalUrl) => {
+                                let fsPath = canonicalUrl.pathname;
+                                if (canonicalUrl.origin !== "null")
+                                    fsPath = this.#sourcePath_Base + '/' + fsPath;
+
+                                return {
+                                    contents: this.#parseSource(fsPath, 
+                                            canonicalUrl.origin),
+                                    syntax: "scss",
+                                };
+                            },
+                        }
+                    ],
+                    // loadPaths: [ this.#sourcePath_Base ],
                     silenceDeprecations: [
-                            /* Bootstrap 5.3.x */
-                            'color-functions', 'global-builtin', 
-                            'if-function', 'import', 'legacy-js-api',
-                            /* Bootstrap 5.0.x */
-                            "abs-percent", "function-units",
-                            ],
-                }, (err, result) => {
-                    if (err) {
-                        this.console.error('Error compiling sass.');
-                        this.console.warn((err as Error).toString());
-                        this.console.warn('  File: ' + err.file)
-                        this.console.warn('  Index: ' + err.column)
-                        this.console.warn('  Line: ' + err.line)
-
-                        resolve(false);
-                        return;
-                    }
-
-                    if (result === undefined)
-                        throw new Error("Sass render result is undefined.");
-
-                    this.#createCss(result.css.toString('utf-8'), sourceAlias);
-                    
-                    if (this.#header.hasTagsGroup_Header('preloads'))
-                        this.#header.clearTagsGroup_Header('preloads');
-
-                    resolve(true);
+                        /* Bootstrap 5.3.x */
+                        'color-functions', 'global-builtin', 
+                        'if-function', 'import', 'legacy-js-api',
+                        /* Bootstrap 5.0.x */
+                        "abs-percent", "function-units",
+                    ],
+                    style: this.builder.isType('rel') ? 'compressed' : 'expanded',
                 });
-            }));
-        }
-    
-        let values = await Promise.all(promises);
-        for (let value of values) {
-            if (!value)
+
+                this.#createCss(result.css.toString(), sourceAlias);
+                
+                if (this.#header.hasTagsGroup_Header('preloads'))
+                    this.#header.clearTagsGroup_Header('preloads');
+            } catch (err: any) {
+                this.#print_Errors.push((err as Error).toString());
+
                 return false;
+            }
+
+            // dartSass.render({
+            //     data: this.#sources[sourceAlias],
+            //     file: sourcePath,
+            //     includePaths: [ this.#sourceDirPath ],
+            //     importer: (url, prev, done) => {                    
+            //         return this.#parseSource(url, prev, done);
+            //     },
+            //     outputStyle: this.builder.isType('rel') ? 'compressed' : 'expanded',
+            //     silenceDeprecations: [
+            //             /* Bootstrap 5.3.x */
+            //             'color-functions', 'global-builtin', 
+            //             'if-function', 'import', 'legacy-js-api',
+            //             /* Bootstrap 5.0.x */
+            //             "abs-percent", "function-units",
+            //             ],
+            // }, (err, result) => {
+            //     if (err) {
+            //         this.console.error('Error compiling sass.');
+            //         this.console.warn((err as Error).toString());
+            //         this.console.warn('  File: ' + err.file)
+            //         this.console.warn('  Index: ' + err.column)
+            //         this.console.warn('  Line: ' + err.line)
+
+            //         resolve(false);
+            //         return;
+            //     }
+
+            //     if (result === undefined)
+            //         throw new Error("Sass render result is undefined.");
+
+            //     this.#createCss(result.css.toString('utf-8'), sourceAlias);
+                
+            //     if (this.#header.hasTagsGroup_Header('preloads'))
+            //         this.#header.clearTagsGroup_Header('preloads');
+
+            //     resolve(true);
+            // });
         }
 
         this.#header.build();
-
-        this.console.success('Finished.');
         
         return true;
     }
@@ -364,7 +378,7 @@ export default class SassExt extends Ext {
     }
 
     __onChange(changeInfos: ChangeInfos): boolean {
-        this.#sources = this.#getSources(this.getWatchedFSPaths());
+        this.#sources = this.#getSources();
         
         this.build();
         
@@ -372,6 +386,8 @@ export default class SassExt extends Ext {
     }
 
     __parse(config: ExtConfigPreset): boolean {
+        this.#print_Errors = [];
+
         if (!('paths' in config))
             return false;
 
@@ -414,7 +430,7 @@ export default class SassExt extends Ext {
 
                 watchPaths.push(path.join(fsPath, '*.*css'));
             } else
-                this.console.error('Unknown extension type: ', fsPath);
+                this.#print_Errors.push('Unknown extension type: ', fsPath);
         }
 
         for (let variant in config.variants) {
@@ -435,7 +451,7 @@ export default class SassExt extends Ext {
     
                     watchPaths.push(path.join(fsPath, '*.*css'));
                 } else
-                    this.console.error('Unknown extension type: ', fsPath);
+                    this.#print_Errors.push('Unknown extension type: ', fsPath);
             }
 
             this.watch(`variants.${variant}.variables`, [ 'add', 'unlink', 'change' ], 
@@ -462,7 +478,7 @@ export default class SassExt extends Ext {
     
                     watchPaths.push(path.join(fsPath, '*.*css'));
                 } else
-                    this.console.error('Unknown extension type: ', fsPath);
+                    this.#print_Errors.push('Unknown extension type: ', fsPath);
             }
 
             this.watch(`substyles.${substyle}.variables`, [ 'add', 'unlink', 'change' ], 
@@ -478,6 +494,79 @@ export default class SassExt extends Ext {
         this.build();
 
         return true;
+    }
+
+    __printErrors(printer: ExtPrinter): void {
+        for (let error of this.#print_Errors)
+            printer.error(error);
+    }
+
+    __printLogs(printer: ExtPrinter): void {
+        let fsPaths = this.getWatchedFSPaths();
+
+        printer.log('Variables:');
+        for (let fsPath of fsPaths.variables) {
+            let relativePath = path.relative(this.#sourcePath_Base, fsPath);
+            relativePath = relativePath.replace(/\\/g, '/');
+            printer.log('    - ' + relativePath);
+        }
+
+        for (let variant of this.#variants) {
+            printer.log('Variant: ' + variant);
+            
+            for (let fsPath of fsPaths[`variants.${variant}.variables`]) {
+                let relativePath = path.relative(this.#sourcePath_Base, fsPath);
+                relativePath = relativePath.replace(/\\/g, '/');
+                printer.log('    - ' + relativePath);
+            }
+        }
+
+        for (let substyle of this.#substyles) {
+            printer.log('Substyle: ' + substyle);
+            
+            for (let fsPath of fsPaths[`substyles.${substyle}.variables`]) {
+                let relativePath = path.relative(this.#sourcePath_Base, fsPath);
+                relativePath = relativePath.replace(/\\/g, '/');
+                printer.log('    - ' + relativePath);
+            }
+        }
+        // sassSource += '\r\n';
+
+        printer.log('Styles:');
+        for (let fsPath of fsPaths.styles) {
+            if (path.basename(fsPath) === 'variables.scss')
+                continue;
+
+            let relativePath = path.relative(this.#sourcePath_Base, fsPath);
+            relativePath = relativePath.replace(/\\/g, '/');
+            printer.log('    - ' + relativePath);
+        }
+
+        for (let variant of this.#variants) {
+            printer.log('Variant: ' + variant);
+            
+            for (let fsPath of fsPaths[`variants.${variant}.styles`]) {
+                if (path.basename(fsPath) === 'variables.scss')
+                    continue;
+
+                let relativePath = path.relative(this.#sourcePath_Base, fsPath);
+                relativePath = relativePath.replace(/\\/g, '/');
+                printer.log('    - ' + relativePath);
+            }
+        }
+
+        for (let substyle of this.#substyles) {
+            printer.log('Variant: ' + substyle);
+            
+            for (let fsPath of fsPaths[`substyles.${substyle}.styles`]) {
+                if (path.basename(fsPath) === 'variables.scss')
+                    continue;
+
+                let relativePath = path.relative(this.#sourcePath_Base, fsPath);
+                relativePath = relativePath.replace(/\\/g, '/');
+                printer.log('    - ' + relativePath);
+            }
+        }
     }
     /* / abWeb.Ext Overrides */
 }

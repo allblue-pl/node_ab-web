@@ -10,12 +10,14 @@ import type { BuildPreset, BuildType } from "./ts-types.ts";
 
 
 export default class Builder {
+    #debug: boolean;
     #buildSettings: BuildSettings;
     #buildData: BuildData;
     #exts: Map<string, Ext>;
     #tasker: Tasker;
     #tasks_BuildEnd: Task<undefined>;
     #tasks_Parse: Task<undefined>;
+    #building: boolean;
 
 
     get settings(): BuildSettings {
@@ -27,7 +29,10 @@ export default class Builder {
     }
 
 
-    constructor(buildPreset: BuildPreset, buildType: "dev"|"rel") { 
+    constructor(buildPreset: BuildPreset, buildType: "dev"|"rel", 
+            debug: boolean = false) { 
+        this.#debug = false;
+
         this.#buildSettings = new BuildSettings(buildPreset, buildType);
         this.#buildData = new BuildData(this.#buildSettings);
 
@@ -37,6 +42,8 @@ export default class Builder {
         this.#tasker.setWaitTime(this.#buildSettings.type === "rel" ? 500 : 100);
         this.#tasks_BuildEnd = this.#createTask_BuildEnd();
         this.#tasks_Parse = this.#createTask_Parse();
+
+        this.#building = true;
     }
 
     build(): void {
@@ -44,6 +51,7 @@ export default class Builder {
     }
 
     buildEnd(): void {
+        this.#building = true;
         this.#tasker.call(this.#tasks_BuildEnd, undefined);
     }
 
@@ -64,18 +72,43 @@ export default class Builder {
         this.#tasker.call(this.#tasks_Parse, undefined);
 
         setInterval(() => {
+            if (this.#building) {
+                if (!this.#debug)
+                    console.clear();
+            }
+
             let activeTasks = this.#tasker.getActiveTaskNames();
+            if (activeTasks.executing.length > 0 || 
+                    activeTasks.waiting.length > 0) {
+                if (activeTasks.executing.length > 0) {
+                    let executingTasks = activeTasks.executing.join(', ');
+                    console.log('Executing tasks:', executingTasks);
+                }
 
-            if (activeTasks.executing.length > 0) {
-                let executingTasks = activeTasks.executing.join(', ');
-                console.log('Executing tasks:', executingTasks);
-            }
+                for (let [ extName, ext ] of this.#exts)
+                    ext.printErrors();
 
-            if (activeTasks.waiting.length > 0) {
-                let waitingTasks = activeTasks.waiting.join(',');
-                console.log('Waiting tasks:', waitingTasks);
+                for (let [ extName, ext ] of this.#exts)
+                    ext.printDebug();
+
+                if (activeTasks.waiting.length > 0) {
+                    let waitingTasks = activeTasks.waiting.join(',');
+                    console.log('Waiting tasks:', waitingTasks);
+                }
+
+                abLog.success("Building... " + (new Date()).toLocaleTimeString());
+            } else if (this.#building) {
+                for (let [ extName, ext ] of this.#exts)
+                    ext.printLogs();
+                for (let [ extName, ext ] of this.#exts)
+                    ext.printErrors();
+                for (let [ extName, ext ] of this.#exts)
+                    ext.printDebug();
+
+                abLog.success("Build finished: " + (new Date()).toLocaleTimeString());
+                this.#building = false;
             }
-        }, 5000);
+        }, 100);
     }
 
 
@@ -99,7 +132,6 @@ export default class Builder {
 
     #createTask_BuildEnd(): Task<undefined> {
         return new Task('buildEnd', (argsArr) => {
-            abLog.success('Build finished.');
             return true;
                 })
             .waitFor('exts.*.build');

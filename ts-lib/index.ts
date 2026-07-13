@@ -5,7 +5,7 @@ class abWeb_Class {
     constructor() {
     }
 
-    exec(config: BuildPreset, buildType: "dev"|"rel" = "dev") {
+    exec(config: BuildPreset, buildType: "dev"|"rel" = "dev"): void {
         let builder = new Builder(config, buildType);
         builder.watch();
     }

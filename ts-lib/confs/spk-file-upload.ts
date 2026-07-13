@@ -9,6 +9,6 @@ export default (build: BuildData): BuildData => {
             build.devFSPath + '/node_modules/spk-file-upload',
         ])
         .extArr(build.data['dist'].paths, [
-            build.devFSPath + '/node_modules/spk-file-upload/images/**',
+            build.devFSPath + '/node_modules/spk-file-upload/images/**/*',
         ]);   
 }

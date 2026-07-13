@@ -17,6 +17,6 @@ export default (build: BuildData): BuildData => {
             build.devFSPath + '/node_modules/spk-lemon-bee',        
         ])
         .extArr(build.data['dist']['paths'], [
-            build.devFSPath + '/node_modules/spk-lemon-bee/images/**',        
+            build.devFSPath + '/node_modules/spk-lemon-bee/images/**/*.*',        
         ]);
 }

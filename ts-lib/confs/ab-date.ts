@@ -4,13 +4,18 @@ import moment from "./moment.ts";
 export default (build: BuildData): BuildData => {
     return build
         .init(moment)
-        .extendObject(build.data['js-libs'].libs, {
-            'ab-date': build.devFSPath + '/node_modules/ab-date/js-lib',
-        })
-        .extendObject(build.data['js-libs'].libs, {
+        .extArr(build.data['js-libs'].tsPkgs, [
+            {
+                tsconfig: `${build.devFSPath}/node_modules/ab-date`,
+                libs: {
+                    "ab-date": `${build.devFSPath}/node_modules/ab-date`,
+                },
+            }
+        ])
+        .extObj(build.data['js-libs'].libs, {
             'moment': build.devFSPath + '/node_modules/ab-date/moment/js-lib',
         })
-        .extendObject(build.data['js-libs'].libs, {
+        .extObj(build.data['js-libs'].libs, {
             'moment-timezone': build.devFSPath + '/node_modules/ab-date/moment-timezone/js-lib',
         });
 }

@@ -1,15 +1,18 @@
 import path from "node:path";
-import Ext from "../../Ext.ts";
+import Ext, { ExtPrinter } from "../../Ext.ts";
 import type { ChangeInfos, ExtConfigPreset } from "../../ts-types.ts";
 import type HeaderExt from "../ab-web_header/HeaderExt.ts";
 import fs from "node:fs";
 import type Builder from "../../Builder.ts";
 
-class ReplaceExt extends Ext {
+export default class ReplaceHeaderExt extends Ext {
     #header: HeaderExt;
     #files: Set<string>;
 
     #config_Files: Array<string>;
+
+    #print_Logs: Array<string>;
+    #print_Errors: Array<string>;
 
     constructor(builder: Builder) { 
         super(builder);
@@ -21,11 +24,15 @@ class ReplaceExt extends Ext {
 
         this.#files = new Set();
         this.#config_Files = [];
+
+        this.#print_Logs = [];
+        this.#print_Errors = [];
     }
 
     /* abWeb.Ext Overrides */
     async __build(): Promise<boolean> {
-        this.console.info('Building...');
+        this.#print_Logs = [];
+        this.#print_Errors = [];
 
         let promises: Array<Promise<boolean>> = [];
         for (let file of this.#files) {
@@ -38,7 +45,7 @@ class ReplaceExt extends Ext {
             }
 
             if (newFileName === null) {
-                this.console.error('Cannot resolve new file name for: ' + file);
+                this.#print_Errors.push('Cannot resolve new file name for: ' + file);
                 return false;
             }
 
@@ -68,7 +75,7 @@ class ReplaceExt extends Ext {
                             return;
                         }
 
-                        this.console.log('Replaced: ' + file + ' -> ' + newFile);
+                        this.#print_Logs.push('Replaced: ' + file + ' -> ' + newFile);
 
                         resolve(true);
                     });
@@ -81,8 +88,6 @@ class ReplaceExt extends Ext {
             if (!value)
                 return false;
         }
-
-        this.console.success('Finished.');
 
         return true;
     }
@@ -110,6 +115,16 @@ class ReplaceExt extends Ext {
         this.watch('files', [ 'add', 'unlink', 'change' ], files);
 
         return true;
+    }
+
+    __printErrors(printer: ExtPrinter): void {
+        for (let error of this.#print_Errors)
+            printer.error(error);
+    }
+    
+    __printLogs(printer: ExtPrinter): void {
+        for (let log of this.#print_Logs)
+            printer.log(log);
     }
     /* / abWeb.Ext Overrides */
 }

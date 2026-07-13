@@ -1,10 +1,14 @@
 import type Builder from "../../Builder.ts";
-import Ext from "../../Ext.ts";
+import Ext, { ExtPrinter } from "../../Ext.ts";
 import type { ChangeInfos, ExtConfigPreset } from "../../ts-types.ts";
 
-export default class TextExt extends Ext {
+export default class TestExt extends Ext {
+    #print_Errors: Array<string>;
+
     constructor(builder: Builder) { 
         super(builder);
+
+        this.#print_Errors = [];
     }
 
 
@@ -27,7 +31,7 @@ export default class TextExt extends Ext {
             return false;
 
         if (!('path' in config)) {
-            this.console.error('Spockies module path not set.');
+            this.#print_Errors.push('Spockies module path not set.');
             return false;
         }
 
@@ -42,6 +46,11 @@ export default class TextExt extends Ext {
         console.log('Watching stuff?', this.getWatchedFSPatterns());
 
         return true;
+    }
+
+    __printErrors(printer: ExtPrinter): void {
+        for (let error of this.#print_Errors)
+            printer.error(error);
     }
     /* / abWeb.Ext Overrides */
 }

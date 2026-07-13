@@ -1,5 +1,6 @@
 {
     "abDependencies": {
+        "@allblue/ab-ts-parser": "https://github.com/allblue-pl/node_ab-ts-parser",
         "@allblue/ts0": "https://github.com/allblue-pl/js_ts0",
         "ab-fs" : "https://github.com/allblue-pl/node_ab-fs",
         "ab-fs-watcher" : "https://github.com/allblue-pl/node_ab-fs-watcher",

@@ -2,13 +2,18 @@
 	"version": "2.0.0",
 	"tasks": [
         {
-            "type": "typescript",
-            "tsconfig": "tsconfig-check.json",
+            "label": "watch-ts",
+            "group": {
+                "kind": "build",
+            },
+            "type": "shell",
+            "command": "ab watch-ts",
+            "options": {
+                "cwd": "${workspaceFolder}"
+            },
             "problemMatcher": [
                 "$tsc"
-            ],
-            "group": "build",
-            "label": "tsc: check - tsconfig-check.json"
+            ]
         }
     ]
 }

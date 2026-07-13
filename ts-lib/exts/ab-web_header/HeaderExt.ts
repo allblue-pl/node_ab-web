@@ -46,7 +46,7 @@ export default class HeaderExt extends Ext {
         this.#exportHash = [];
     }
 
-    addScriptUri_Header(groupId: string, scriptUri: string) {
+    addScriptUri_Header(groupId: string, scriptUri: string): void {
         if (!this.#header_ScriptUrisGroups.has(groupId))
             this.addScriptUrisGroup_PostBody(groupId);
 
@@ -54,7 +54,7 @@ export default class HeaderExt extends Ext {
         this.build();
     }
 
-    addScriptUri_PostBody(groupId: string, scriptUri: string) {
+    addScriptUri_PostBody(groupId: string, scriptUri: string): void {
         if (!this.#postBody_ScriptUrisGroups.has(groupId))
             this.addScriptUrisGroup_PostBody(groupId);
 
@@ -63,7 +63,7 @@ export default class HeaderExt extends Ext {
     }
 
     addTag_PostBody(groupId: string, tagName: string, 
-            tagAttribs: {[name:string]: string}) {
+            tagAttribs: {[name:string]: string}): void {
         if (!this.#postBody_TagsGroups.has(groupId))
             this.addTagsGroup_PostBody(groupId);
 
@@ -74,7 +74,7 @@ export default class HeaderExt extends Ext {
     }
 
     addTag_Header(groupId: string, tagName: string, 
-            tagAttribs: {[name:string]: string}) {
+            tagAttribs: {[name:string]: string}): void {
         if (!this.#header_TagsGroups.has(groupId))
             this.addTagsGroup_Header(groupId);
 
@@ -85,60 +85,60 @@ export default class HeaderExt extends Ext {
     }
 
     addScriptUrisGroup_Header(groupId: string, 
-            props: GroupsProps<string> = { values: [] }) {
+            props: GroupsProps<string> = { values: [] }): void {
         this.#header_ScriptUrisGroups.add(groupId, props);
     }
 
     addScriptUrisGroup_PostBody(groupId: string, 
-            props: GroupsProps<string> = { values: [] }) {
+            props: GroupsProps<string> = { values: [] }): void {
         this.#postBody_ScriptUrisGroups.add(groupId, props);
     }
 
-    addTagsGroup_Header(groupId: string, props: GroupsProps<Tag> = { values: [] }) {
+    addTagsGroup_Header(groupId: string, props: GroupsProps<Tag> = { values: [] }): void {
         this.#header_TagsGroups.add(groupId, props);
     }
 
-    addTagsGroup_PostBody(groupId: string, props: GroupsProps<Tag> = { values: [] }) {
+    addTagsGroup_PostBody(groupId: string, props: GroupsProps<Tag> = { values: [] }): void {
         this.#postBody_TagsGroups.add(groupId, props);
     }
 
-    clearScriptUrisGroup_Header(groupId: string) {
+    clearScriptUrisGroup_Header(groupId: string): void {
         this.#header_ScriptUrisGroups.clear(groupId);
         this.build();
     }
 
-    clearScriptUrisGroup_PostBody(groupId: string) {
+    clearScriptUrisGroup_PostBody(groupId: string): void {
         this.#postBody_ScriptUrisGroups.clear(groupId);
         this.build();
     }
 
-    clearTagsGroup_PostBody(groupId: string) {
+    clearTagsGroup_PostBody(groupId: string): void {
         this.#postBody_TagsGroups.clear(groupId);
         this.build();
     }
 
-    clearTagsGroup_Header(groupId: string) {
+    clearTagsGroup_Header(groupId: string): void {
         this.#header_TagsGroups.clear(groupId);
         this.build();
     }
 
-    hasScriptUrisGroup_Header(groupId: string) {
+    hasScriptUrisGroup_Header(groupId: string): boolean {
         return this.#header_ScriptUrisGroups.has(groupId);
     }
 
-    hasScriptUrisGroup_PostBody(groupId: string) {
+    hasScriptUrisGroup_PostBody(groupId: string): boolean {
         return this.#postBody_ScriptUrisGroups.has(groupId);
     }
 
-    hasTagsGroup_PostBody(groupId: string) {
+    hasTagsGroup_PostBody(groupId: string): boolean {
         return this.#postBody_TagsGroups.has(groupId);
     }
 
-    hasTagsGroup_Header(groupId: string) {
+    hasTagsGroup_Header(groupId: string): boolean {
         return this.#header_TagsGroups.has(groupId);
     }
 
-    getHtml_PostBody() {
+    getHtml_PostBody(): string {
         var html = '';
 
         /* Sort */
@@ -154,7 +154,7 @@ export default class HeaderExt extends Ext {
         return html;
     }
 
-    getHtml_PostBody_Scripts() {
+    getHtml_PostBody_Scripts(): string {
         var html = '';
 
         /* Sort */
@@ -170,7 +170,7 @@ export default class HeaderExt extends Ext {
         return html;
     }
 
-    getHtml_Header() {
+    getHtml_Header(): string {
         let buildSettings = this.builder.settings;
         var html = '';
 
@@ -202,7 +202,7 @@ export default class HeaderExt extends Ext {
         return html;
     }
 
-    getHtml_Header_Scripts() {
+    getHtml_Header_Scripts(): string {
         var html = '';
 
         /* Sort */
@@ -218,12 +218,16 @@ export default class HeaderExt extends Ext {
         return html;
     }
 
+    removeScriptUri_PostBody(groupId: string, scriptUri: string): void {
+        this.#postBody_ScriptUrisGroups.removeValue(groupId, (value) => {
+            return scriptUri === value;
+        });
+    }
+
 
     /* abWeb.Ext Overrides */
     __build(): Promise<boolean> {
         return new Promise((resolve, reject) => {
-            this.console.info('Building...');
-
             if (!abFS.existsDirSync(path.dirname(this.#postBody_FilePath)))
                 abFS.mkdirRecursiveSync(path.dirname(this.#postBody_FilePath));
 
@@ -258,7 +262,6 @@ export default class HeaderExt extends Ext {
             }
 
             if (this.builder.isType('rel')) {
-                this.console.success('Finished.');
                 resolve(true);
                 return;
             } else {
@@ -271,7 +274,6 @@ export default class HeaderExt extends Ext {
 
                 }
                 
-                this.console.success('Finished.');
                 resolve(true);
                 return;
             }

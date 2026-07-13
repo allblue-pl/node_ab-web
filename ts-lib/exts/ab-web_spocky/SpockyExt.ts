@@ -1,5 +1,4 @@
-import { List } from "@allblue/ts0";
-import Ext from "../../Ext.ts";
+import Ext, { ExtPrinter } from "../../Ext.ts";
 import HeaderExt from "../ab-web_header/HeaderExt.ts";
 import JSLibsExt from "../ab-web_js-libs/JSLibsExt.ts";
 import type Builder from "../../Builder.ts";
@@ -7,156 +6,123 @@ import path from "node:path";
 import type { ChangeInfos, ExtConfigPreset } from "../../ts-types.ts";
 import abFS from "ab-fs";
 import fs from "node:fs";
-import LayoutBuilder from "./LayoutBuilder.ts";
+import LayoutParser from "./LayoutParser.ts";
+import { presets_JSPkgInfos, presets_TSPkgInfos, type JSPkgInfos, type TSPkgInfos } from "../ab-web_js-libs/ts-types.ts";
+import ts0 from "@allblue/ts0";
 
 export default class SpockyExt extends Ext {
-    #header: HeaderExt;
     #jsLibs: JSLibsExt;
 
     #modulePath = null;
 
-    #layoutPaths: Array<string>;
+    #indexes_ToBuild: {[libName:string]: boolean};
     #layoutOverrides: {[layoutPath:string]: string};
-    #layoutPaths_Watched: Array<string>;
-    #layoutPaths_ToBuild: Array<string>;
-    #indexLayoutPaths: Array<string>;
-    #packages: {[packageName:string]: {"fsPath": string}};
+    #layoutPaths_ToBuild: {[libName:string]: Array<string>};
+    #libInfos: {[libName:string]: {fsPath: string, layoutsFSPath: string}};
+
+    #print_Errors: Array<string>;
 
     constructor(builder: Builder) { 
         super(builder);
 
-        this.#header = this.uses('header') as HeaderExt;
         this.#jsLibs = this.uses('js-libs') as JSLibsExt;
 
         this.#modulePath = null;
 
-        this.#layoutPaths = [];
-        this.#layoutOverrides = {};
-        this.#layoutPaths_Watched = [];
-        this.#layoutPaths_ToBuild = [];
-        this.#indexLayoutPaths = [];
-        this.#packages = {};
+        this.#indexes_ToBuild = {};
 
-        this.#header.addTagsGroup_PostBody('spocky');
+        this.#layoutOverrides = {};
+        this.#layoutPaths_ToBuild = {};
+        this.#libInfos = {};
+
+        this.#print_Errors = [];
     }
 
 
-    #buildIndex() {
-        let changed = false;
+    #buildIndex(libName: string): void {
+        let libInfo = this.#libInfos[libName];
+        let jsLibInfo = this.#jsLibs.getLibInfo(libName);
+
+        this.#indexes_ToBuild[libName] = false;
+
+        let layoutPaths = this.getWatchedFSPaths()[`layouts.${libName}`];
+
+        let content = `import { Layout } from "spocky";\r\n`;
+
+        // if (jsLibInfo.type === "ts")
+        //     content += `import Layout from "spocky";`;
         
-        if (this.#layoutPaths.length !== this.#indexLayoutPaths.length)
-            changed = true;
+        for (let layoutPath of layoutPaths) {
+            let layoutName = path.basename(layoutPath, '.html');
         
-        if (!changed) {
-            for (let layoutPath of this.#layoutPaths) {
-                if (!this.#indexLayoutPaths.includes(layoutPath)) {
-                    changed = true;
-                    break;
-                }
-            }
+            content += `import ${layoutName} from "./${layoutName}.${jsLibInfo.type}";\r\n`;
         }
 
-        if (!changed) {
-            for (let indexLayoutPath of this.#indexLayoutPaths) {
-                if (!this.#layoutPaths.includes(indexLayoutPath)) {
-                    changed = true
-                    break;
-                }
-            }
+        content += `\r\nexport class $layouts_Class {\r\n`;
+
+        for (let layoutPath of layoutPaths) {
+            let layoutName = path.basename(layoutPath, '.html');
+            let returnType = jsLibInfo.type === "ts" ? `: typeof ${layoutName}` : "";
+
+            content += `    get ${layoutName}()${returnType} {\r\n`;
+            content += `        return ${layoutName};\r\n`;
+            content += `    }\r\n\r\n`;
         }
 
-        if (!changed)
-            return;
+        content += `\r\n    constructor() {\r\n\r\n    }\r\n\r\n`;
+        
+        content +=  `   getContent(layoutName` + (jsLibInfo.type === "ts" ? `: string` : "") + 
+                `)` + (jsLibInfo.type === "ts" ? `: Array<any>` : "") + ` {\r\n`;
+        for (let layoutPath of layoutPaths) {
+            let layoutName = path.basename(layoutPath, '.html');
 
-        this.#indexLayoutPaths = this.#layoutPaths.slice(0);
-
-        let indexPaths: {[layoutDirPath:string]: Array<string>} = {};
-        for (let layoutPath of this.#indexLayoutPaths) {
-            let packageName = path.basename(path.join(layoutPath, '../..'));   
-            let packagePath = path.resolve(this.#packages[packageName].fsPath);
-            let layoutDirPath = path.join(packagePath, 'js-lib/$layouts');
-            
-            if (!(layoutDirPath in indexPaths))
-                indexPaths[layoutDirPath] = [];
-            indexPaths[layoutDirPath].push(layoutPath);
-        }
-        this.#indexLayoutPaths = this.#layoutPaths.slice(0);
-
-        for (let indexDirPath in indexPaths) {
-            let content = 
-`'use strict';
-
-`
-            
-            for (let layoutPath of indexPaths[indexDirPath]) {
-                let layoutName = path.basename(layoutPath, '.html');
-            
-                content +=
-`export const ${layoutName} = require('./${layoutName}');
-`
-                ;
-            }
-    
-            fs.writeFileSync(path.join(indexDirPath, 'index.js'), content);
-
-            let indexRelPath = path.relative(this.builder.settings.config.index, 
-                    path.join(indexDirPath, 'index.js')).replace('/\\/g', '/');
-            this.console.log(`Created: ${indexRelPath}`);
+            content += `        if (layoutName === "${layoutName}")\r\n`;
+            content += `            return ${layoutName}.Content;\r\n`;
         }
 
+        content += `\r\n        throw new Error("Layout '\${layoutName}' does not exist.");\r\n`;
+        content += `    }\r\n`
+
+        content += `}\r\n`;
+        content += `const $layouts = new $layouts_Class();\r\n`;
+        content += `export default $layouts`;
+
+        fs.writeFileSync(path.join(libInfo.layoutsFSPath, "index") + 
+                `.${jsLibInfo.type}`, content);
+
+        // let indexRelPath = path.relative(this.builder.settings.config.index, 
+        //         path.join(indexDirPath, 'index.js')).replace('/\\/g', '/');
     }
 
 
     /* abWeb.Ext Overrides */
-    async __build(): Promise<boolean> {
-        this.console.info('Building...');   
-        let layoutPaths: Array<string> = [];
-        for (let layoutPath of this.#layoutPaths_ToBuild) {
-            if (!layoutPaths.includes(layoutPath))
-                layoutPaths.push(layoutPath);
-        }
+    __build(): boolean {
+        this.#print_Errors = [];
 
-        let buildPromises: Array<Promise<boolean>> = [];    
-        for (let layoutPath of layoutPaths) {
-            for (let i = this.#layoutPaths_ToBuild.length; i >= 0; i--) {
-                if (this.#layoutPaths_ToBuild[i] === layoutPath)
-                    this.#layoutPaths_ToBuild.splice(i, 1);
-            }
-
-            let packageName = path.basename(path.join(layoutPath, '../..'));
-            let packagePath = this.#packages[packageName].fsPath;
-
-
-            buildPromises.push((async (): Promise<boolean> => {
+        for (let libName in this.#layoutPaths_ToBuild) {
+            for (let layoutPath of this.#layoutPaths_ToBuild[libName]) {
                 try {
-                    LayoutBuilder.Build(this, layoutPath, packagePath);
+                    let layoutContent = LayoutParser.Parse(layoutPath);
+                    let jsLibInfo = this.#jsLibs.getLibInfo(libName);
+                    let buildFSPath = path.join(this.#libInfos[libName].layoutsFSPath, 
+                            path.basename(layoutPath, '.html') + `.${jsLibInfo.type}`);
+                    fs.writeFileSync(buildFSPath, layoutContent);
                 } catch (err) {
-                    this.console.error(`Cannot parse '${layoutPath}':`);
-                    this.console.warn((err as Error).stack as string);
+                    this.#print_Errors.push(`Cannot parse '${layoutPath}':`);
+                    this.#print_Errors.push((err as Error).stack as string);
                     return false;
                 }
 
-                let relLayoutPath = path.relative(this.builder.settings.config.index, 
-                        layoutPath).replace(/\\/g, '/');
-
-                return true;
-            })());
+                // let relLayoutPath = path.relative(this.builder.settings.config.index, 
+                //         layoutPath).replace(/\\/g, '/');
+                this.#layoutPaths_ToBuild[libName] = [];
+            }
         }
 
-        buildPromises.push((async (): Promise<boolean> => {
-            this.#buildIndex();
-            return true;
-        })());
-
-        let values = await Promise.all(buildPromises);
-        for (let value of values) {
-            if (!value)
-                return false;
+        for (let libName in this.#layoutPaths_ToBuild) {
+            if (this.#indexes_ToBuild[libName])
+                this.#buildIndex(libName);
         }
-
-        this.#header.clearTagsGroup_PostBody('spocky');
-
-        this.console.success('Finished.');
 
         return true;
     }
@@ -166,43 +132,32 @@ export default class SpockyExt extends Ext {
     }
 
     __onChange(changeInfos: ChangeInfos): boolean {
-        this.#layoutPaths = this.getWatchedFSPaths().layouts;
+        for (let watchedName in changeInfos) {
+            if (watchedName.startsWith("layouts.")) {
+                let libName = watchedName.substring("layouts.".length);
+                for (let changeInfo of changeInfos[watchedName]) {
+                    let index = this.#layoutPaths_ToBuild[libName].indexOf(
+                            changeInfo.fsPath);
 
-        if ('layouts' in changeInfos) {
-            for (let changeInfo of changeInfos.layouts) {
-                if (changeInfo.eventTypes[changeInfo.eventTypes.length - 1] === 
-                        "unlink")
-                    continue;
+                    if (changeInfo.eventTypes[changeInfo.eventTypes.length - 1] === 
+                            "unlink") {
+                        if (index !== -1)
+                            this.#layoutPaths_ToBuild[libName].splice(index, 1);
 
-                this.#layoutPaths_ToBuild.push(changeInfo.fsPath);
-            }
-        }
+                        continue;
+                    }
 
-        if ('packages' in changeInfos) {
-            for (let changeInfo of changeInfos.packages) {
-                if (changeInfo.eventTypes[changeInfo.eventTypes.length - 1] === "unlink")
-                    continue;
+                    if (index === -1) {
+                        this.#layoutPaths_ToBuild[libName].push(changeInfo.fsPath);
+                        if (changeInfo.eventTypes.includes("add")) {
+                            let fsPath_Parsed = path.parse(changeInfo.fsPath);
 
-                let packageName = path.basename(changeInfo.fsPath);                
-                let layoutPath = packageName in this.#layoutOverrides ?
-                        path.resolve(path.join(this.#layoutOverrides[packageName], 'layouts/*.html')) :
-                        path.join(changeInfo.fsPath, 'layouts/*.html');
-
-                if (!this.#layoutPaths_Watched.includes(layoutPath)) {
-                    this.#layoutPaths_Watched.push(layoutPath);
-                    this.watch('layouts', [ 'add', 'unlink', 'change' ], this.#layoutPaths_Watched);
+                            this.#indexes_ToBuild[libName] = true;
+                        }
+                    }
                 }
-
-                this.#packages[packageName] = {
-                    fsPath: changeInfo.fsPath
-                };
-                this.#jsLibs.addLib(packageName, path.join(changeInfo.fsPath, 'js-lib'));
             }
         }
-        
-        // if ('layouts' in changes) {
-        //     for (let i = 0; i < )
-        // }
 
         this.build();
 
@@ -210,51 +165,93 @@ export default class SpockyExt extends Ext {
     }
 
     __parse(config: ExtConfigPreset): boolean {
-        if (!('packages' in config))
-            return false;
+        this.#print_Errors = [];
 
         if (!('path' in config)) {
-            this.console.error('Spockies module path not set.');
+            this.#print_Errors.push('Spockies module path not set.');
             return false;
         }
-
-        if ('layoutOverrides' in config)
-            this.#layoutOverrides = config.layoutOverrides;
 
         this.#modulePath = config.path;
-        this.#layoutPaths_Watched = [];
-        this.#packages = {};
 
-        let packagePaths = [];
-        for (let fsPath of config.packages) {
-            // layoutPaths.push(path.join(fsPath, 'layouts/*.html'));
-            packagePaths.push(fsPath);
-        }
+        for (let libFSPath of config.packages) {
+            let libName = path.basename(libFSPath);
 
-        this.watch('layouts', [ 'add', 'unlink', 'change' ], this.#layoutPaths_Watched);
-        this.watch('packages', [ 'add' ], packagePaths);
-
-        return true;
-    }
-
-    __parse_Pre(config: ExtConfigPreset): boolean {
-        if (!('packages' in config))
-            return false;
-
-        if (!('path' in config)) {
-            this.console.error('Spockies module path not set.');
-            return false;
-        }
-
-        for (let fsPath of config.packages) {
-            let layoutsPath = path.join(fsPath, 'js-lib', '$layouts');
-            if (fs.existsSync(layoutsPath)) {
+            let layoutsPath = path.join(libFSPath, 'js-lib/$layouts');
+            if (fs.existsSync(layoutsPath))
                 abFS.removeSync(layoutsPath);
+            fs.mkdirSync(layoutsPath);
+
+            this.#libInfos[libName] = {
+                fsPath: path.join(libFSPath, "js-lib"),
+                layoutsFSPath: layoutsPath,
+            };
+            this.#jsLibs.addLib(libName, path.join(libFSPath, "js-lib"), "js", 
+                    null, true);
+            this.#layoutPaths_ToBuild[libName] = [];
+            this.#indexes_ToBuild[libName] = false;
+
+            this.watch(`layouts.${libName}`, [ "add", "change", "unlink" ], [
+                path.join(libFSPath, "layouts/**/*.html"),
+            ]);
+        }
+
+        let jsPkgs = ts0.assertType(config.jsPkgs, presets_JSPkgInfos) as JSPkgInfos;
+        for (let pkgInfo of jsPkgs) {
+            for (let libName in pkgInfo.libs) {
+                let libFSPath = pkgInfo.libs[libName];
+
+                let layoutsPath = path.join(libFSPath, '$layouts');
+                if (fs.existsSync(layoutsPath))
+                    abFS.removeSync(layoutsPath);
                 fs.mkdirSync(layoutsPath);
+
+                this.#libInfos[libName] = {
+                    fsPath: libFSPath,
+                    layoutsFSPath: layoutsPath,
+                };
+
+                this.#jsLibs.addLib(libName, libFSPath, "js");
+                this.#layoutPaths_ToBuild[libName] = [];
+                this.#indexes_ToBuild[libName] = false;
+
+                this.watch(`layouts.${libName}`, [ "add", "change", "unlink" ], [
+                    path.join(libFSPath, "layouts/**/*.html"),
+                ]);
+            }
+        }
+
+        let tsPkgs = ts0.assertType(config.tsPkgs, presets_TSPkgInfos) as TSPkgInfos;
+        for (let pkgInfo of tsPkgs) {
+            for (let libName in pkgInfo.libs) {
+                let libFSPath = pkgInfo.libs[libName];
+
+                let layoutsPath = path.join(libFSPath, '$layouts');
+                if (fs.existsSync(layoutsPath))
+                    abFS.removeSync(layoutsPath);
+                fs.mkdirSync(layoutsPath);
+
+                this.#libInfos[libName] = {
+                    fsPath: libFSPath,
+                    layoutsFSPath: layoutsPath,
+                };
+
+                this.#jsLibs.addLib(libName, libFSPath, "ts", pkgInfo.tsconfig);
+                this.#layoutPaths_ToBuild[libName] = [];
+                this.#indexes_ToBuild[libName] = false;
+
+                this.watch(`layouts.${libName}`, [ "add", "change", "unlink" ], [
+                    path.join(libFSPath, "layouts/**/*.html"),
+                ]);
             }
         }
 
         return true;
+    }
+
+    __printErrors(printer: ExtPrinter): void {
+        for (let error of this.#print_Errors)
+            printer.error(error);
     }
     /* / abWeb.Ext Overrides */
 }

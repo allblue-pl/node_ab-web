@@ -1,7 +1,7 @@
 import anymatch from "anymatch";
 import path from "node:path";
 import type Builder from "../../Builder.ts";
-import Ext from "../../Ext.ts";
+import Ext, { ExtPrinter } from "../../Ext.ts";
 import Groups from "../../Groups.ts";
 import type HeaderExt from "../ab-web_header/HeaderExt.ts";
 import abFS, { abFSMatcher } from "ab-fs";
@@ -21,6 +21,8 @@ export default class JSExt extends Ext {
     #scriptsGroups_Compile: Groups<string>;
     #scriptsGroups_Include: Groups<string>;
     #watchedFSPaths: {"include": Array<string>, "compile": Array<string>};
+
+    #print_Errors: {[fileName:string]: string};
 
     constructor(builder: Builder) {
         super(builder);
@@ -55,6 +57,8 @@ export default class JSExt extends Ext {
             "include": [],
             "compile": [],
         };
+
+        this.#print_Errors = {};
     }
 
     addScript(groupId: string, scriptPath: string, type: "compile"|"include" = "compile"): void {
@@ -84,7 +88,7 @@ export default class JSExt extends Ext {
         this.getScriptsGroups(type).add(groupId, props);
     }
 
-    buildHeader() {
+    buildHeader(): void {
         this.#header.build();
     }
 
@@ -105,7 +109,7 @@ export default class JSExt extends Ext {
     }
 
     removeScript(groupId: string, scriptPath: string, 
-            type: "compile"|"include" = "compile") {
+            type: "compile"|"include" = "compile"): void {
         this.getScriptsGroups(type).removeValue(groupId, (value) => {
             return value === scriptPath;
         });
@@ -154,10 +158,10 @@ export default class JSExt extends Ext {
 
     /* abWeb.Ext Overrides */
     __build(): boolean {
+        this.#print_Errors = {};
+
         let buildSettings = this.builder.settings;
         let buildConfig = buildSettings.config;
-
-        this.console.info('Building...');
 
         let types: Array<"compile"|"include"> = [ 'include', 'compile' ];
         for (let type of types) {
@@ -173,18 +177,12 @@ export default class JSExt extends Ext {
                 compile: '',
             };
             for (let type of types) {
-                this.console.log(`Type (${type}):`);
-
                 let scriptGroups = this.getScriptsGroups(type).getValues();
                 for (let [ groupId, scriptPaths ] of scriptGroups) {
-                    this.console.info('    - ' + groupId);
                     for (let fsPath of scriptPaths) {
-                        js[type] += `\r\n// File: ${fsPath}\r\n`;
+                        let relPath = path.relative(path.resolve("."), fsPath);
+                        js[type] += `\r\n// File: ${relPath}\r\n`;
                         js[type] += fs.readFileSync(fsPath) + '\r\n';
-                        
-                        let relPath = path.relative(buildConfig.index, fsPath)
-                                .replace(/\\/g, '/');
-                        this.console.log('    - ' + relPath);
                     }
                 }
             }
@@ -194,8 +192,7 @@ export default class JSExt extends Ext {
 
             let js_Include_Result = uglifyJS.minify(js.include);
             if (typeof js_Include_Result.error !== 'undefined') {
-                // console.log('Test', js_Include_Result);
-                this.console.error(js_Include_Result.error);
+                this.#print_Errors.rel = js_Include_Result.error;
                 js_Include_Result = null;
             }
 
@@ -212,14 +209,11 @@ export default class JSExt extends Ext {
                     minified: true,
                 });
 
-                let modulePaths_CoreJSBundle = path.join(
-                        this.builder.settings.config.dev, "node_modules", 
-                        "core-js-bundle");
-                // __dirname + '/../../node_modules/core-js-bundle/
-                let modulePaths_RegeneratorRuntime = path.join(
-                        this.builder.settings.config.dev, "node_modules", 
-                        "regenerator-runtime");
-                // __dirname + '/../../node_modules/regenerator-runtime
+                let modulePaths_CoreJSBundle = path.resolve(path.join(
+                        "node_modules", "core-js-bundle"));
+
+                let modulePaths_RegeneratorRuntime = path.resolve(path.join(
+                        "node_modules", "regenerator-runtime"));
 
                 let js_Include_Code = js_Include_Result === null ? 
                         '' : js_Include_Result.code;
@@ -233,54 +227,26 @@ export default class JSExt extends Ext {
                 fs.writeFileSync(this.#scriptPath_Min, script.code + "\r\n\r\n" +
                         "//# sourceMappingURL=./script.min.js.map");
                 fs.writeFileSync(this.#scriptPath_Map, JSON.stringify(script.map));
-                // +
-                        // '\r\n\r\n//# sourceMappingURL=script.min.js.map');
-                // fs.writeFileSync(this.#scriptPath_Map, JSON.stringify(script.map));
 
                 if (this.#header.hasScriptUrisGroup_PostBody('js.min'))
                     this.#header.clearScriptUrisGroup_PostBody('js.min');
                 else
                     this.#header.addScriptUrisGroup_PostBody('js.min');
 
-                // this.#header.addTag_PostBody('js.min', 'script', {
-                //     src: this.uri(this.#scriptPath_Include),
-                //     // type: 'text/javascript',
-                // }, '');
                 this.#header.addScriptUri_PostBody('js.min',
                         this.uri(this.#scriptPath_Include));
 
-                // this.#header.addTag_PostBody('js.min', 'script', {
-                //     src: this.uri(this.#scriptPath_Min),
-                //     // type: 'text/javascript',
-                // }, '');
                 this.#header.addScriptUri_PostBody('js.min',
                         this.uri(this.#scriptPath_Min));
 
                 this.#header.build();
-
-                this.console.success('Finished.');
             } catch (err) {
-                // this.#header.addTag_Body('js.min', 'script', {
-                //     src: this.uri(this.#scriptPath_Include),
-                //     // type: 'text/javascript',
-                // }, '');
-
-
-                // this.#header.addTag_Body('js.min', 'script', {
-                //     src: this.uri(this.#scriptPath_Min),
-                //     // type: 'text/javascript',
-                // }, '');
-
-                this.console.error((err as Error).stack as string);
+                this.#print_Errors.rel = (err as Error).stack as string;
             }
         } else {
-            this.console.log('Scripts:');
             for (let type of types) {
-                this.console.log(`Type (${type}):`)
-
                 let scriptGroups = this.getScriptsGroups(type).getValues();
                 for (let [ groupId, scriptPaths ] of scriptGroups) {
-                    this.console.info('    - ' + groupId);
                     scriptPaths = this.#sortScriptPaths(scriptPaths, 
                             this.#watchedFSPaths[type]);
                     for (let fsPath of scriptPaths) {
@@ -289,7 +255,7 @@ export default class JSExt extends Ext {
                             relPath = path.relative(buildConfig.index, fsPath)
                                     .replace(/\\/g, '/');
                         } catch (e) {
-                            this.console.error((e as Error).toString());
+                            this.#print_Errors[fsPath] = (e as Error).toString();
                             continue;
                         }
 
@@ -302,14 +268,11 @@ export default class JSExt extends Ext {
                         // }, '');
                         let groupId_Header = `js.${type}.${groupId}`;
                         this.#header.addScriptUri_PostBody(groupId_Header, uri);
-            
-                        this.console.log('    - ' + relPath);
                     }
                 }
             }
 
             this.#header.build();
-            this.console.success('Finished.');
         }
 
         return true;
@@ -410,5 +373,32 @@ export default class JSExt extends Ext {
         return true;
     }
     /* / abWeb.Ext Overrides */
+
+    __printErrors(printer: ExtPrinter): void {
+        for (let fsPath in this.#print_Errors)
+            printer.error(this.#print_Errors[fsPath]);
+    }
+
+    __printLogs(printer: ExtPrinter): void {
+        let buildSettings = this.builder.settings;
+        let buildConfig = buildSettings.config;
+
+        let types: Array<"compile"|"include"> = [ 'include', 'compile' ];
+
+        printer.log('Scripts:');
+        for (let type of types) {
+            printer.log(`Type (${type}):`)
+
+            let scriptGroups = this.getScriptsGroups(type).getValues();
+            for (let [ groupId, scriptPaths ] of scriptGroups) {
+                printer.info('  - ' + groupId);
+                for (let fsPath of scriptPaths) {
+                    let relPath = path.relative(buildConfig.index, fsPath)
+                        .replace(/\\/g, '/');
+                    printer.log('    - ' + relPath);
+                }
+            }
+        }
+    }
 
 }

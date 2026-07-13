@@ -1,4 +1,4 @@
-import { AssertError } from "@allblue/ts0";
+import { TS0AssertError } from "@allblue/ts0";
 import { Watcher } from "ab-fs-watcher";
 import { Task } from "ab-tasks";
 import chalk from "chalk";
@@ -7,10 +7,12 @@ import type Builder from "./Builder.ts";
 import type ConfigSettings from "./ConfigSettings.ts";
 import type { ChalkColor, ChangeInfo, ChangeInfos, TaskArgs_OnChange } from "./ts-types.ts";
 import type { WatchEventType } from "ab-fs-watcher/lib/ts-types.js";
+import abLog from "ab-log";
 
 export default abstract class Ext {
     #builder: Builder;
-    #console: ExtConsole;
+    #console: ExtPrinter;
+    #debugMessages: Array<Array<any>>;
     #initialized: boolean;
     #listeners_AfterBuild: Array<() => void>;
     #tasks_AfterBuild: Task<undefined>;
@@ -18,14 +20,10 @@ export default abstract class Ext {
     #tasks_Clean: Task<undefined>;
     #tasks_OnChange: Task<TaskArgs_OnChange>;
     #watchers: Map<string, Watcher>;
-
+    
 
     get builder(): Builder {
         return this.#builder;
-    }
-
-    get console(): ExtConsole {
-        return this.#console;
     }
 
     get name(): string {
@@ -45,7 +43,8 @@ export default abstract class Ext {
         let onChangeTaskName = `exts.${this.name}.onChange`;
 
         this.#builder = builder;
-        this.#console = new ExtConsole(this);
+        this.#console = new ExtPrinter(this);
+        this.#debugMessages = [];
         this.#initialized = false;
         this.#listeners_AfterBuild = [];
 
@@ -92,17 +91,25 @@ export default abstract class Ext {
         this.#watchers = new Map();
     }
 
-    afterBuild(listener: () => void) {
+    afterBuild(listener: () => void): void {
        this.#listeners_AfterBuild.push(listener);
     }
 
-    build() {
+    build(): void {
         this.#builder._tasker.call(this.#tasks_Build, undefined);
         this.#builder.buildEnd();
     }
 
-    clean() {
+    clean(): void {
         this.#builder._tasker.call(this.#tasks_Clean, undefined);
+    }
+
+    clearDebug(): void {
+        this.#debugMessages = [];
+    }
+
+    debug(...messages: Array<any>): void {
+        this.#debugMessages.push(messages);
     }
 
     getWatchedFSPaths(): {[key:string]: Array<string>} {
@@ -129,7 +136,23 @@ export default abstract class Ext {
         this.__onInit();
     }
 
-    unwatch(watcherName: string) {
+    printDebug(): void {
+        for (let messages of this.#debugMessages) {
+            let messages_T = messages.slice();
+            messages_T.splice(0, 0, `DEBUG (${this.name}):`);
+            abLog.info.apply(abLog, messages_T);
+        }
+    }
+
+    printLogs(): void {
+        this.__printLogs(this.#console);
+    }
+
+    printErrors(): void {
+        this.__printErrors(this.#console);
+    }
+
+    unwatch(watcherName: string): void {
         let watcher = this.#watchers.get(watcherName);
         if (watcher === undefined)
             throw new Error(`Watcher '${watcherName}' does not exist.`);
@@ -138,17 +161,11 @@ export default abstract class Ext {
         this.#watchers.delete(watcherName);
     }
 
-    uri(fsPath: string, addHash: boolean = true) {
+    uri(fsPath: string, addHash: boolean = true, error: string|null = null): string {
         let settings = this.#builder.settings;
 
-        let relativePath = null;
-        try {
-            relativePath = path.relative(settings.config.index, 
-                    fsPath).replace(/\\/g, '/');
-        } catch (e) {
-            this.console.error((e as Error).toString());
-            return '#';
-        }
+        let relativePath = path.relative(settings.config.index, 
+                fsPath).replace(/\\/g, '/');
         
         return settings.config.base + relativePath + (addHash ?
                 `?v=${settings.buildHash}` : '');
@@ -211,13 +228,21 @@ export default abstract class Ext {
         return true;
     }
 
+    __printLogs(printer: ExtPrinter): void {
+        
+    }
+
+    __printErrors(printer: ExtPrinter): void {
+        
+    }
+
 
     abstract __getName(): string;
 }
 
-class ExtConsole {
-    get _logPrefix(): string {
-        return chalk.magenta(this.#ext.name + ':  ');
+export class ExtPrinter {
+    get #logPrefix(): string {
+        return chalk.magenta(this.#ext.name + ': ');
     }
 
 
@@ -229,25 +254,27 @@ class ExtConsole {
     }
 
     color(color: ChalkColor, ...args: Array<string>): void {
-        var logArgs: Array<string> = [ this._logPrefix ];
-        for (let arg of args) {
-            if (typeof arg.toString === 'function')
-                arg = arg.toString();
-
-            if (typeof arg === 'string') {
-                let strArr = arg.split('\n');
-                for (let i = 1; i < strArr.length; i++) {
-                    let line = '';
-                    for (let j = 0; j < this._logPrefix.length / 2; j++)
-                        line += ' ';
-                    strArr[i] = line + strArr[i];
-                }
-
-                arg = strArr.join('\n');
-            }
-
+        var logArgs: Array<string> = [ this.#logPrefix ];
+        for (let arg of args)
             logArgs.push(chalk[color](arg) as string);
-        }
+        // for (let arg of args) {
+        //     if (typeof arg.toString === 'function')
+        //         arg = arg.toString();
+
+        //     if (typeof arg === 'string') {
+        //         let strArr = arg.split('\n');
+        //         for (let i = 1; i < strArr.length; i++) {
+        //             let line = '';
+        //             for (let j = 0; j < this.#logPrefix.length / 2; j++)
+        //                 line += ' ';
+        //             strArr[i] = line + strArr[i];
+        //         }
+
+        //         arg = strArr.join('\n');
+        //     }
+
+        //     logArgs.push(chalk[color](arg) as string);
+        // }
 
         console.log.apply(console, logArgs);
     }
@@ -265,7 +292,7 @@ class ExtConsole {
     }
 
     log(...args: Array<string>): void {
-        console.log(this._logPrefix, ...args);
+        console.log(this.#logPrefix, ...args);
     }
 
     success(...args: Array<string>): void {

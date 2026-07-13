@@ -9,6 +9,6 @@ export default (build: BuildData): BuildData => {
             build.devFSPath + '/git/Font-Awesome/scss/fontawesome.scss',
         ])
         .extArr(build.data['dist']['paths'], [
-            build.devFSPath + '/git/Font-Awesome/webfonts/**',
+            build.devFSPath + '/git/Font-Awesome/webfonts/**/*',
         ]);
 }                                                                                                                                                                                                            
