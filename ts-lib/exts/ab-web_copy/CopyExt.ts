@@ -18,7 +18,7 @@ export default class CopyExt extends Ext {
 
 
     /* abWeb.Ext Overrides */
-    __build(): boolean {
+    override __build(): boolean {
         this.#print_Copied = [];
         if (this.#config === null)
             return false;
@@ -43,12 +43,12 @@ export default class CopyExt extends Ext {
         return "copy";
     }
 
-    __onChange(changeInfos: ChangeInfos): boolean {
+    override __onChange(changeInfos: ChangeInfos): boolean {
         this.build();
         return true;
     }
 
-    __parse(config: ExtConfigPreset): boolean {
+    override __parse(config: ExtConfigPreset): boolean {
         this.#config = config;
 
         if (!this.builder.isType('rel'))
@@ -68,7 +68,7 @@ export default class CopyExt extends Ext {
         return true;
     }
 
-    __parse_Pre(config: ExtConfigPreset): boolean {
+    override __parse_Pre(config: ExtConfigPreset): boolean {
         this.#config = config;
 
         if (!this.builder.isType('rel'))
@@ -87,7 +87,7 @@ export default class CopyExt extends Ext {
         return true;
     }
 
-    __printLogs(printer: ExtPrinter): void {
+    override __printLogs(printer: ExtPrinter): void {
         for (let print of this.#print_Copied)
             printer.log(print);
     }

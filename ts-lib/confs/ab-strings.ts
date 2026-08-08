@@ -2,7 +2,12 @@ import type BuildData from "../BuildData.ts";
 
 export default (build: BuildData): BuildData => {
     return build
-        .extendObject(build.data['js-libs'].libs, {
-            'ab-strings': build.devFSPath + '/node_modules/ab-strings/js-lib',
-        });
+        .extArr(build.data['js-libs'].tsPkgs, [
+            {
+                tsconfig: `${build.devFSPath}/node_modules/ab-strings`,
+                libs: {
+                    'ab-strings': `${build.devFSPath}/node_modules/ab-strings`,
+                },
+            },
+        ]);
 }

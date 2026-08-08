@@ -13,7 +13,7 @@ export default class TestExt extends Ext {
 
 
     /* abWeb.Ext Overrides */
-    async __build(): Promise<boolean> {
+    override async __build(): Promise<boolean> {
         return true;
     }
 
@@ -21,12 +21,12 @@ export default class TestExt extends Ext {
         return "spocky";
     }
 
-    __onChange(changeInfos: ChangeInfos): boolean {
+    override __onChange(changeInfos: ChangeInfos): boolean {
         console.log(changeInfos);
         return true;
     }
 
-    __parse(config: ExtConfigPreset): boolean {
+    override __parse(config: ExtConfigPreset): boolean {
         if (!('packages' in config))
             return false;
 
@@ -48,7 +48,7 @@ export default class TestExt extends Ext {
         return true;
     }
 
-    __printErrors(printer: ExtPrinter): void {
+    override __printErrors(printer: ExtPrinter): void {
         for (let error of this.#print_Errors)
             printer.error(error);
     }

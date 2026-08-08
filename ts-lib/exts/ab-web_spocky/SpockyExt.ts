@@ -1,5 +1,4 @@
 import Ext, { ExtPrinter } from "../../Ext.ts";
-import HeaderExt from "../ab-web_header/HeaderExt.ts";
 import JSLibsExt from "../ab-web_js-libs/JSLibsExt.ts";
 import type Builder from "../../Builder.ts";
 import path from "node:path";
@@ -17,6 +16,7 @@ export default class SpockyExt extends Ext {
 
     #indexes_ToBuild: {[libName:string]: boolean};
     #layoutOverrides: {[layoutPath:string]: string};
+    #layoutParser: LayoutParser;
     #layoutPaths_ToBuild: {[libName:string]: Array<string>};
     #libInfos: {[libName:string]: {fsPath: string, layoutsFSPath: string}};
 
@@ -36,6 +36,8 @@ export default class SpockyExt extends Ext {
         this.#libInfos = {};
 
         this.#print_Errors = [];
+
+        this.#layoutParser = new LayoutParser();
     }
 
 
@@ -71,13 +73,25 @@ export default class SpockyExt extends Ext {
 
         content += `\r\n    constructor() {\r\n\r\n    }\r\n\r\n`;
         
-        content +=  `   getContent(layoutName` + (jsLibInfo.type === "ts" ? `: string` : "") + 
+        content +=  `    getContent(layoutName` + (jsLibInfo.type === "ts" ? `: string` : "") + 
                 `)` + (jsLibInfo.type === "ts" ? `: Array<any>` : "") + ` {\r\n`;
         for (let layoutPath of layoutPaths) {
             let layoutName = path.basename(layoutPath, '.html');
 
             content += `        if (layoutName === "${layoutName}")\r\n`;
             content += `            return ${layoutName}.Content;\r\n`;
+        }
+
+        content += `\r\n        throw new Error("Layout '\${layoutName}' does not exist.");\r\n`;
+        content += `    }\r\n`
+
+        content +=  `\r\n    getLayoutClass(layoutName` + (jsLibInfo.type === "ts" ? `: string` : "") + 
+                `)` + (jsLibInfo.type === "ts" ? `: new () => Layout` : "") + ` {\r\n`;
+        for (let layoutPath of layoutPaths) {
+            let layoutName = path.basename(layoutPath, '.html');
+
+            content += `        if (layoutName === "${layoutName}")\r\n`;
+            content += `            return ${layoutName};\r\n`;
         }
 
         content += `\r\n        throw new Error("Layout '\${layoutName}' does not exist.");\r\n`;
@@ -96,13 +110,13 @@ export default class SpockyExt extends Ext {
 
 
     /* abWeb.Ext Overrides */
-    __build(): boolean {
+    override __build(): boolean {
         this.#print_Errors = [];
 
         for (let libName in this.#layoutPaths_ToBuild) {
             for (let layoutPath of this.#layoutPaths_ToBuild[libName]) {
                 try {
-                    let layoutContent = LayoutParser.Parse(layoutPath);
+                    let layoutContent =this.#layoutParser.parse(layoutPath);
                     let jsLibInfo = this.#jsLibs.getLibInfo(libName);
                     let buildFSPath = path.join(this.#libInfos[libName].layoutsFSPath, 
                             path.basename(layoutPath, '.html') + `.${jsLibInfo.type}`);
@@ -131,7 +145,7 @@ export default class SpockyExt extends Ext {
         return "spocky";
     }
 
-    __onChange(changeInfos: ChangeInfos): boolean {
+    override __onChange(changeInfos: ChangeInfos): boolean {
         for (let watchedName in changeInfos) {
             if (watchedName.startsWith("layouts.")) {
                 let libName = watchedName.substring("layouts.".length);
@@ -164,7 +178,7 @@ export default class SpockyExt extends Ext {
         return true;
     }
 
-    __parse(config: ExtConfigPreset): boolean {
+    override __parse(config: ExtConfigPreset): boolean {
         this.#print_Errors = [];
 
         if (!('path' in config)) {
@@ -249,7 +263,7 @@ export default class SpockyExt extends Ext {
         return true;
     }
 
-    __printErrors(printer: ExtPrinter): void {
+    override __printErrors(printer: ExtPrinter): void {
         for (let error of this.#print_Errors)
             printer.error(error);
     }

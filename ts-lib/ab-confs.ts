@@ -5,6 +5,8 @@ import abCookies from "./confs/ab-cookies.ts";
 import abDataNative from "./confs/ab-data-native.ts";
 import abDataWeb from "./confs/ab-data-web.ts";
 import abData from "./confs/ab-data.ts";
+import abData_Espada_ABData from "./confs/ab-data_espada_ab-data.ts";
+import abData_Espada_ECore from "./confs/ab-data_espada_ecore.ts";
 import abDatabaseNative from "./confs/ab-database-native.ts";
 import abDate from "./confs/ab-date.ts";
 import abFields from "./confs/ab-fields.ts";
@@ -59,6 +61,12 @@ export class abConfs_Class {
     }
     get abData(): ExtInit {
         return abData;
+    }
+    get abData_Espada_ABData(): ExtInit {
+        return abData_Espada_ABData;
+    }
+    get abData_Espada_ECore(): ExtInit {
+        return abData_Espada_ECore;
     }
     get abDatabaseNative(): ExtInit {
         return abDatabaseNative;

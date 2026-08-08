@@ -1,10 +1,10 @@
-import anymatch from "anymatch";
+import { abMatch as anymatch } from "ab-matcher";
 import path from "node:path";
 import type Builder from "../../Builder.ts";
 import Ext, { ExtPrinter } from "../../Ext.ts";
 import Groups from "../../Groups.ts";
 import type HeaderExt from "../ab-web_header/HeaderExt.ts";
-import abFS, { abFSMatcher } from "ab-fs";
+import abFS from "ab-fs";
 import fs from "node:fs";
 import uglifyJS from "uglify-js";
 import babel from "@babel/core"
@@ -157,7 +157,7 @@ export default class JSExt extends Ext {
 
 
     /* abWeb.Ext Overrides */
-    __build(): boolean {
+    override __build(): boolean {
         this.#print_Errors = {};
 
         let buildSettings = this.builder.settings;
@@ -282,7 +282,7 @@ export default class JSExt extends Ext {
         return "js";
     }
 
-    __onChange(changeInfos: ChangeInfos): boolean {
+    override __onChange(changeInfos: ChangeInfos): boolean {
         if (this.builder.isType('dev')) {
             let types: Array<"compile"|"include"> = [ 'include', 'compile' ];
             let build = false;
@@ -325,7 +325,7 @@ export default class JSExt extends Ext {
         return true;
     }
 
-    __parse(config: ExtConfigPreset): boolean {
+    override __parse(config: ExtConfigPreset): boolean {
         // abWeb.types.conf(config, {
         //     'paths':  {
         //         required: false,
@@ -374,12 +374,12 @@ export default class JSExt extends Ext {
     }
     /* / abWeb.Ext Overrides */
 
-    __printErrors(printer: ExtPrinter): void {
+    override __printErrors(printer: ExtPrinter): void {
         for (let fsPath in this.#print_Errors)
             printer.error(this.#print_Errors[fsPath]);
     }
 
-    __printLogs(printer: ExtPrinter): void {
+    override __printLogs(printer: ExtPrinter): void {
         let buildSettings = this.builder.settings;
         let buildConfig = buildSettings.config;
 

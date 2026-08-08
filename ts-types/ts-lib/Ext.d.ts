@@ -1,3 +1,4 @@
+import { type WatchIgnoreFn } from "ab-fs-watcher";
 import { Task } from "ab-tasks";
 import type Builder from "./Builder.ts";
 import type { ChalkColor, ChangeInfos } from "./ts-types.ts";
@@ -26,7 +27,7 @@ export default abstract class Ext {
     unwatch(watcherName: string): void;
     uri(fsPath: string, addHash?: boolean, error?: string | null): string;
     uses(extName: string): Ext;
-    watch(watcherName: string, eventTypes: Array<WatchEventType>, pathPatterns: Array<string>): void;
+    watch(watcherName: string, eventTypes: Array<WatchEventType>, pathPatterns: Array<string>, ignoreFn?: WatchIgnoreFn | null): void;
     __build(): boolean | Promise<boolean>;
     __clean(): boolean | Promise<boolean>;
     __onChange(changeInfos: ChangeInfos): boolean;

@@ -5,8 +5,15 @@
         "ab-fs" : "https://github.com/allblue-pl/node_ab-fs",
         "ab-fs-watcher" : "https://github.com/allblue-pl/node_ab-fs-watcher",
         "ab-log": "https://github.com/allblue-pl/node_ab-log",
+        "ab-matcher": "https://github.com/allblue-pl/node_ab-matcher",
         "ab-tasks": "https://github.com/allblue-pl/js_ab-tasks",
         "ab-xml-parser": "https://github.com/allblue-pl/node_ab-xml-parser",
         "js-libs": "https://github.com/allblue-pl/node_js-libs"
+    },
+    "abTS": {
+        "tsconfig": ".",
+        "libs": [
+            "."
+        ]
     }
 }

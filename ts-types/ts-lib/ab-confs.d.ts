@@ -7,6 +7,8 @@ export declare class abConfs_Class {
     get abDataNative(): ExtInit;
     get abDataWeb(): ExtInit;
     get abData(): ExtInit;
+    get abData_Espada_ABData(): ExtInit;
+    get abData_Espada_ECore(): ExtInit;
     get abDatabaseNative(): ExtInit;
     get abDate(): ExtInit;
     get abFields(): ExtInit;

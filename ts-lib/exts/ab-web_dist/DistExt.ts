@@ -23,7 +23,7 @@ export default class DistExt extends Ext {
         return "dist";
     }
 
-    __onChange(changeInfos: ChangeInfos): boolean {
+    override __onChange(changeInfos: ChangeInfos): boolean {
         for (let onChangeInfo of changeInfos.files) {
             let fsPath = onChangeInfo.fsPath;
             let fileRelPath = path.relative(path.join('..', 'dev'), 
@@ -48,7 +48,7 @@ export default class DistExt extends Ext {
         return true;
     }
 
-    __parse(config: ExtConfigPreset): boolean {
+    override __parse(config: ExtConfigPreset): boolean {
         // if ('path' in config)
         //     this.#path = config.path;
 
@@ -72,7 +72,7 @@ export default class DistExt extends Ext {
         //     abFS.removeSync(distPath);
     // }
 
-    __printLogs(printer: ExtPrinter): void {
+    override __printLogs(printer: ExtPrinter): void {
         this.#print_Copied.sort();
         for (let print of this.#print_Copied)
             printer.log(`Copied: ${print}`);

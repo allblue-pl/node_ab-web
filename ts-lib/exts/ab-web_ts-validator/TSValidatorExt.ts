@@ -18,7 +18,7 @@ export default class TSValidatorExt extends Ext {
 
 
     /* abWeb.Ext Overrides */
-    async __build(): Promise<boolean> {
+    override async __build(): Promise<boolean> {
         this.#print_Errors = await abTSValidator.validateTSConfig_Async(
                 this.#projectFSPath, this.#tsconfigFSPath);
 
@@ -29,13 +29,13 @@ export default class TSValidatorExt extends Ext {
         return "ts-validator";
     }
 
-    __onChange(changeInfos: ChangeInfos): boolean {
+    override __onChange(changeInfos: ChangeInfos): boolean {
         this.build();
 
         return true;
     }
 
-    __parse(config: ExtConfigPreset): boolean {
+    override __parse(config: ExtConfigPreset): boolean {
         this.#print_Errors = [];
 
         if (config.project === undefined) {
@@ -55,7 +55,7 @@ export default class TSValidatorExt extends Ext {
         return true;
     }
 
-    __printErrors(printer: ExtPrinter): void {
+    override __printErrors(printer: ExtPrinter): void {
         for (let error of this.#print_Errors)
             printer.error(error);
     }

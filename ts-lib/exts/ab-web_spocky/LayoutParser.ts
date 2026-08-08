@@ -2,61 +2,8 @@ import path from "node:path";
 import { Document } from "ab-xml-parser";
 import fs from "node:fs";
 import type { ElemType } from "ab-xml-parser/lib/ts-types.js";
-import type SpockyExt from "./SpockyExt.ts";
 
 export default class LayoutParser {
-    static Parse(layoutPath: string): string {
-        let layoutName = path.basename(layoutPath, '.html');
-        
-        let content = fs.readFileSync(layoutPath);
-        let xmlDocument = new Document(content.toString());
-
-        let layoutContent: Array<any> = [];
-        for (let node of xmlDocument.nodes)
-            LayoutParser.AddNode(layoutContent, node);
-
-        let layoutContentString = JSON.stringify(layoutContent);
-        let buildContent =
-`import { type TS0RawObject } from "@allblue/ts0";;
-import { Layout } from "spocky";
-
-export default class ${layoutName} extends Layout {
-    static get Content(): Array<any> {
-        return ${layoutContentString};
-    }
-
-    constructor(defaultFieldValues: TS0RawObject = {}) {
-        super(${layoutName}.Content, defaultFieldValues);
-    }
-}
-`
-        ;
-
-        return buildContent.replaceAll("\n", "\r\n");
-        // if (!fs.existsSync(buildDirPath))
-        //     fs.mkdirSync(buildDirPath);
-        // fs.writeFileSync(buildPath, buildContent);
-    }
-
-    static AddNode(parentLayoutNode: Array<any>, node: ElemType): void {
-        if (node.type === 'text') {
-            parentLayoutNode.push(node.value);
-            return;
-        } else if (node.type === 'comment') {
-            /* To Do */ 
-            return;
-        } else if (node.type === 'element') {
-            let lNode = [ node.name, node.attribs ];
-            parentLayoutNode.push(lNode);
-
-            let children = node.children;
-            if (children !== undefined) {
-                for (let childNode of children)
-                    LayoutParser.AddNode(lNode, childNode);
-            }
-        }
-    }
-
     static ParseFields(content: string): Array<string> {
         let lTextsArr = [];
 
@@ -92,5 +39,71 @@ export default class ${layoutName} extends Layout {
             lTextsArr.push(text);
 
         return lTextsArr;
+    }
+
+
+    #fields: Array<string>;
+
+
+    constructor() {
+        this.#fields = [];
+    }
+
+    parse(layoutPath: string): string {
+        let layoutName = path.basename(layoutPath, '.html');
+        
+        let content = fs.readFileSync(layoutPath);
+
+        return this.parseString(layoutName, content.toString());
+    }
+
+    parseString(layoutName: string, layoutStr: string): string {
+        let xmlDocument = new Document(layoutStr);
+
+        let layoutContent: Array<any> = [];
+        for (let node of xmlDocument.nodes)
+            this.#addNode(layoutContent, node);
+
+        let layoutContentString = JSON.stringify(layoutContent);
+        let buildContent =
+`import { type TS0RawObject } from "@allblue/ts0";;
+import { Layout } from "spocky";
+
+export default class ${layoutName} extends Layout {
+    static get Content(): Array<any> {
+        return ${layoutContentString};
+    }
+
+    constructor(defaultFieldValues: TS0RawObject = {}) {
+        super(${layoutName}.Content, defaultFieldValues);
+    }
+}
+`
+        ;
+
+        return buildContent.replaceAll("\n", "\r\n");
+        // if (!fs.existsSync(buildDirPath))
+        //     fs.mkdirSync(buildDirPath);
+        // fs.writeFileSync(buildPath, buildContent);
+    }
+
+    
+    #addNode(parentLayoutNode: Array<any>, node: ElemType): void {
+        if (node.type === 'text') {
+            parentLayoutNode.push(node.value);
+            return;
+        } else if (node.type === 'comment') {
+            /* To Do */ 
+            return;
+        } else if (node.type === 'element') {
+            let lNode = [ node.name, node.attribs ];
+            parentLayoutNode.push(lNode);
+
+            let children = node.children;
+            if (children !== undefined) {
+                for (let childNode of children)
+                    this.#addNode(lNode, childNode);
+            }
+        }
     }
 }

@@ -226,7 +226,7 @@ export default class HeaderExt extends Ext {
 
 
     /* abWeb.Ext Overrides */
-    __build(): Promise<boolean> {
+    override __build(): Promise<boolean> {
         return new Promise((resolve, reject) => {
             if (!abFS.existsDirSync(path.dirname(this.#postBody_FilePath)))
                 abFS.mkdirRecursiveSync(path.dirname(this.#postBody_FilePath));
@@ -325,7 +325,7 @@ export default class HeaderExt extends Ext {
         return "header";
     }
 
-    __parse(config: ExtConfigPreset): boolean {
+    override __parse(config: ExtConfigPreset): boolean {
         this.#exportHash = config.exportHash;
 
         return true;

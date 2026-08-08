@@ -3,7 +3,6 @@ import type Builder from "../../Builder.ts";
 import Ext, { ExtPrinter } from "../../Ext.ts";
 import type JSExt from "../ab-web_js/JSExt.ts";
 import fs from "node:fs";
-import babel from "@babel/core";
 import { presets_JSPkgInfos, presets_TSPkgInfos, type JSPkgInfos, type LibInfo, type ScriptInfo, type TSPkgInfos } from "./ts-types.ts";
 import type { ChangeInfos, ExtConfigPreset } from "../../ts-types.ts";
 import ts0, { ts0Assert } from "@allblue/ts0";
@@ -109,12 +108,24 @@ export default class JSLibsExt extends Ext {
             } else {
                 this.watch(libName, [ 'add', 'unlink', 'change' ], [ 
                     `${libFSPath}/**/*.js`,
-                ]);
+                ], (fsPath) => {
+                    let ignoreFSPath = path.join(libFSPath, "node_modules") + path.sep;
+                    return fsPath.startsWith(ignoreFSPath);
+                });
             }
         } else {
             this.watch(libName, [ 'add', 'unlink', 'change' ], [ 
                 `${libFSPath}/**/*.ts`,
-            ]);
+            ], (fsPath) => {
+                let ignoreFSPath = path.join(libFSPath, "node_modules") + path.sep;
+                if (fsPath.startsWith(ignoreFSPath))
+                    return true;
+
+                if (fsPath.lastIndexOf(".d.ts") === fsPath.length - 5)
+                    return true;
+
+                return false;
+            });
         }
     }
 
@@ -188,7 +199,7 @@ export default class JSLibsExt extends Ext {
 
 
     /* abWeb.Ext Overrides */
-    async __build(): Promise<boolean> {
+    override async __build(): Promise<boolean> {
         let buildPromises: Array<Promise<boolean>> = [];
         let buildJS: boolean = false;
         for (let scriptInfo of this.#scriptsToBuild) {
@@ -224,13 +235,11 @@ export default class JSLibsExt extends Ext {
         return "js-libs";
     }
 
-    __onChange(changeInfos: ChangeInfos): boolean {
+    override __onChange(changeInfos: ChangeInfos): boolean {
         for (let libName in changeInfos) {
+            let libInfo = this.#libInfos.get(libName);
+            ts0Assert(libInfo !== undefined, `Lib '${libName}' does not exist in 'libInfos'.`);
             for (let changeInfo of changeInfos[libName]) {
-                if (changeInfo.fsPath.indexOf(".d.ts") === 
-                        changeInfo.fsPath.length - 5)
-                    continue;
-
                 let scriptToBuildFound = false;
                 for (let scriptInfo of this.#scriptsToBuild) {
                     if (changeInfo.fsPath === scriptInfo.scriptFSPath) {
@@ -256,7 +265,7 @@ export default class JSLibsExt extends Ext {
         return true;
     }
 
-    __parse(config: ExtConfigPreset): boolean {
+    override __parse(config: ExtConfigPreset): boolean {
         this.#print_Errors = [];
 
         if (config.project === undefined) {
@@ -287,7 +296,7 @@ export default class JSLibsExt extends Ext {
         for (let libName in config.libs)
             this.addLib(libName, config.libs[libName], "js", null, true);
 
-        let jsPkgs = ts0.assertType(config.jsPkgs, presets_JSPkgInfos) as JSPkgInfos;
+        let jsPkgs = ts0.assertType<JSPkgInfos>(config.jsPkgs, presets_JSPkgInfos);
         for (let pkgInfo of jsPkgs) {
             for (let libName in pkgInfo.libs) {
                 let libFSPath = pkgInfo.libs[libName];
@@ -295,7 +304,14 @@ export default class JSLibsExt extends Ext {
             }
         }
         
-        let tsPkgs = ts0.assertType(config.tsPkgs, presets_TSPkgInfos) as TSPkgInfos;
+        let errors: Array<string> = [];
+        let tsPkgs = ts0.validateType<TSPkgInfos>(config.tsPkgs, presets_TSPkgInfos,
+                errors);
+        if (tsPkgs === undefined) {
+            console.info("tsPkgs", config.tsPkgs);
+            console.warn(errors);
+            throw new Error("Wrong 'tsPkgs' format in JSLibs Ext.");
+        }
         for (let pkgInfo of tsPkgs) {
             for (let libName in pkgInfo.libs) {
                 let libFSPath = pkgInfo.libs[libName];
@@ -304,7 +320,7 @@ export default class JSLibsExt extends Ext {
         }
 
         this.#js.clearScriptsGroup('js-libs');
-        // console.log('Test', this.scriptPath);
+
         this.#js.addScript('js-libs', scriptPath);
 
         this.build();
@@ -312,7 +328,7 @@ export default class JSLibsExt extends Ext {
         return true;
     }
 
-    __printErrors(printer: ExtPrinter): void {
+    override __printErrors(printer: ExtPrinter): void {
         for (let error of this.#print_Errors)
             printer.error(error);
         for (let libName in this.#print_LibErrors) {
@@ -327,7 +343,7 @@ export default class JSLibsExt extends Ext {
         }
     }
 
-    __printLogs(printer: ExtPrinter): void {
+    override __printLogs(printer: ExtPrinter): void {
         for (let libName in this.#print_ScriptLogs) {
             printer.log(`Lib: ${libName}`);
             let files = [];

@@ -16,7 +16,11 @@ export default (build: BuildData): BuildData => {
         .init(abTextParser)
         .init(js0)
         .init(ts0)
-        .extObj(build.data['js-libs'].libs, {
-            'spocky': build.devFSPath + '/node_modules/spocky/js-lib',
-        });
+        .extArr(build.data['js-libs'].jsPkgs, [
+            {
+                libs: {
+                    'spocky': build.devFSPath + '/node_modules/spocky/js-lib',
+                },
+            }
+        ]);
 }

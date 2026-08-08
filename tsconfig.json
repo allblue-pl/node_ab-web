@@ -6,20 +6,23 @@
         "emitDeclarationOnly": true,
         "erasableSyntaxOnly": true,
         "module": "nodenext",
+        "noImplicitOverride": true,
         "outDir": ".",
         "rewriteRelativeImportExtensions": true,
         "rootDir": ".",
         "strict": true,
         "target": "esnext",
         "typeRoots": [
-            "./node_modules/@types"
+            "./node_modules/@types",
+            "./node_modules/ab-matcher/js-types"
         ],
-        "types": ["node"],
+        "types": [ "node", "normalize-path", "picomatch" ],
         "useDefineForClassFields": true,
         "verbatimModuleSyntax": true
     },
     "exclude": [
-        "./index.ts",
+        "./node_modules/**/node_modules/**/*",
+        "./index.js",
         "./lib/**/*",
         "./tests/**/*",
         "./ts-types/**/*"

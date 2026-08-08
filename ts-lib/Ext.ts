@@ -1,5 +1,5 @@
 import { TS0AssertError } from "@allblue/ts0";
-import { Watcher } from "ab-fs-watcher";
+import { Watcher, type WatchIgnoreFn } from "ab-fs-watcher";
 import { Task } from "ab-tasks";
 import chalk from "chalk";
 import path from "node:path";
@@ -183,13 +183,15 @@ export default abstract class Ext {
     }
 
     watch(watcherName: string, eventTypes: Array<WatchEventType>, 
-            pathPatterns: Array<string>): void {
+            pathPatterns: Array<string>, ignoreFn: WatchIgnoreFn|null = null): void {
         let watcher =  this.#watchers.get(watcherName);
         if (watcher === undefined) {
             watcher = new Watcher();
             this.#watchers.set(watcherName, watcher);
 
             watcher.on(eventTypes, (fsPath, eventType) => {
+                // console.log(`File changed (${this.name}:${watcherName})`, fsPath);
+
                 this.#builder._tasker.call(this.#tasks_OnChange, {
                     watcherName: watcherName,
                     fsPath: fsPath,
@@ -198,7 +200,7 @@ export default abstract class Ext {
             });
         }
 
-        watcher.update(pathPatterns);
+        watcher.update(pathPatterns, ignoreFn);
     }
 
 
@@ -254,7 +256,7 @@ export class ExtPrinter {
     }
 
     color(color: ChalkColor, ...args: Array<string>): void {
-        var logArgs: Array<string> = [ this.#logPrefix ];
+        var logArgs: Array<string> = []; // [ this.#logPrefix ];
         for (let arg of args)
             logArgs.push(chalk[color](arg) as string);
         // for (let arg of args) {

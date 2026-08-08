@@ -277,7 +277,7 @@ export default class SassExt extends Ext {
 
 
     /* abWeb.Ext Overrides */
-    __build(): boolean {
+    override __build(): boolean {
         this.#print_Errors = [];
 
         for (let sourceAlias in this.#sources) {
@@ -377,7 +377,7 @@ export default class SassExt extends Ext {
         return "sass";
     }
 
-    __onChange(changeInfos: ChangeInfos): boolean {
+    override __onChange(changeInfos: ChangeInfos): boolean {
         this.#sources = this.#getSources();
         
         this.build();
@@ -385,7 +385,7 @@ export default class SassExt extends Ext {
         return true;
     }
 
-    __parse(config: ExtConfigPreset): boolean {
+    override __parse(config: ExtConfigPreset): boolean {
         this.#print_Errors = [];
 
         if (!('paths' in config))
@@ -496,12 +496,12 @@ export default class SassExt extends Ext {
         return true;
     }
 
-    __printErrors(printer: ExtPrinter): void {
+    override __printErrors(printer: ExtPrinter): void {
         for (let error of this.#print_Errors)
             printer.error(error);
     }
 
-    __printLogs(printer: ExtPrinter): void {
+    override __printLogs(printer: ExtPrinter): void {
         let fsPaths = this.getWatchedFSPaths();
 
         printer.log('Variables:');

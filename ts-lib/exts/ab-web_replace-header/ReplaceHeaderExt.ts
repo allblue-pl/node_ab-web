@@ -30,7 +30,7 @@ export default class ReplaceHeaderExt extends Ext {
     }
 
     /* abWeb.Ext Overrides */
-    async __build(): Promise<boolean> {
+    override async __build(): Promise<boolean> {
         this.#print_Logs = [];
         this.#print_Errors = [];
 
@@ -96,13 +96,13 @@ export default class ReplaceHeaderExt extends Ext {
         return "replace-header";
     }
 
-    __onChange(changeInfos: ChangeInfos): boolean {
+    override __onChange(changeInfos: ChangeInfos): boolean {
         this.#files = new Set(this.getWatchedFSPaths().files);
         this.#header.build();
         return true;
     }
 
-    __parse(config: ExtConfigPreset): boolean {
+    override __parse(config: ExtConfigPreset): boolean {
         if (!('files' in config))
             return false;
 
@@ -117,12 +117,12 @@ export default class ReplaceHeaderExt extends Ext {
         return true;
     }
 
-    __printErrors(printer: ExtPrinter): void {
+    override __printErrors(printer: ExtPrinter): void {
         for (let error of this.#print_Errors)
             printer.error(error);
     }
     
-    __printLogs(printer: ExtPrinter): void {
+    override __printLogs(printer: ExtPrinter): void {
         for (let log of this.#print_Logs)
             printer.log(log);
     }
