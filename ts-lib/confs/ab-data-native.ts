@@ -8,7 +8,13 @@ export default (build: BuildData): BuildData => {
         .init(abDatabaseNative)
         .init(js0)
         .init(webABApi)
-        .extendObject(build.data['js-libs'].libs, {
-            'ab-data-native': build.devFSPath + '/node_modules/ab-data-native/js-lib',
-        });
+        .extArr(build.data['js-libs'].tsPkgs, [
+            {
+                tsconfig: `${build.devFSPath}/node_modules/ab-data-native`,
+                libs: {
+                    'ab-data-native': `${build.devFSPath}/node_modules/ab-data-native`,
+                },
+                
+            }
+        ]);
 }

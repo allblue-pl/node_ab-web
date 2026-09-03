@@ -41,6 +41,7 @@ export declare class abConfs_Class {
     get spkTables(): ExtInit;
     get spkTinymce(): ExtInit;
     get spocky(): ExtInit;
+    get ts0(): ExtInit;
     get webABApi(): ExtInit;
     constructor();
 }

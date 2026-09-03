@@ -39,8 +39,9 @@ import spkMessages from "./confs/spk-messages.ts";
 import spkTables from "./confs/spk-tables.ts";
 import spkTinymce from "./confs/spk-tinymce.ts";
 import spocky from "./confs/spocky.ts";
+import ts0 from "./confs/ts0.ts";
 import webABApi from "./confs/web-ab-api.ts";
-import type Ext from "./Ext.ts";
+import type ABWebExt from "./ABWebExt.ts";
 import type { ExtInit } from "./ts-types.ts";
 
 export class abConfs_Class {
@@ -163,6 +164,9 @@ export class abConfs_Class {
     }
     get spocky(): ExtInit {
         return spocky;
+    }
+    get ts0(): ExtInit {
+        return ts0;
     }
     get webABApi(): ExtInit {
         return webABApi;

@@ -1,6 +1,6 @@
 import { Tasker } from "ab-tasks";
 import BuildSettings from "./BuildSettings.ts";
-import type Ext from "./Ext.ts";
+import type ABWebExt from "./ABWebExt.ts";
 import type { BuildPreset, BuildType } from "./ts-types.ts";
 export default class Builder {
     #private;
@@ -10,7 +10,7 @@ export default class Builder {
     build(): void;
     buildEnd(): void;
     isType(buildType: BuildType): boolean;
-    usesExt(extClass: typeof Ext): boolean;
+    usesExt(extClass: typeof ABWebExt): boolean;
     watch(): void;
-    _getExt(extName: string): Ext | null;
+    _getExt(extName: string): ABWebExt | null;
 }

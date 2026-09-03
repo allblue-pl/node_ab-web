@@ -1,9 +1,9 @@
 import type Builder from "../../Builder.ts";
-import Ext, { ExtPrinter } from "../../Ext.ts";
+import ABWebExt, { ExtPrinter } from "../../ABWebExt.ts";
 import { type LibInfo } from "./ts-types.ts";
 import type { ChangeInfos, ExtConfigPreset } from "../../ts-types.ts";
 import { JSLibsBuilder } from "js-libs";
-export default class JSLibsExt extends Ext {
+export default class JSLibsExt extends ABWebExt {
     #private;
     get buildFSPath(): string;
     get libBuilder(): JSLibsBuilder;

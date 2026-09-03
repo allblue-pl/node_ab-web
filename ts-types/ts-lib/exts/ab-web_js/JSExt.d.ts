@@ -1,8 +1,8 @@
 import type Builder from "../../Builder.ts";
-import Ext, { ExtPrinter } from "../../Ext.ts";
+import ABWebExt, { ExtPrinter } from "../../ABWebExt.ts";
 import Groups from "../../Groups.ts";
 import type { ChangeInfos, ExtConfigPreset, GroupsProps } from "../../ts-types.ts";
-export default class JSExt extends Ext {
+export default class JSExt extends ABWebExt {
     #private;
     constructor(builder: Builder);
     addScript(groupId: string, scriptPath: string, type?: "compile" | "include"): void;

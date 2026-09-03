@@ -1,8 +1,8 @@
 import type Builder from "../../Builder.ts";
-import Ext from "../../Ext.ts";
+import ABWebExt from "../../ABWebExt.ts";
 import type SpockyExt from "../ab-web_spocky/SpockyExt.ts";
 
-export default class SPKFormsExt extends Ext {
+export default class SPKFormsExt extends ABWebExt {
     #spocky: SpockyExt;
 
     constructor(builder: Builder) {

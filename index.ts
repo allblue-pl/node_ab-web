@@ -12,9 +12,10 @@ import TestExt from "./ts-lib/exts/ab-web_test/TestExt.js";
 import TSValidatorExt from "./ts-lib/exts/ab-web_ts-validator/TSValidatorExt.ts"
 import type { ConfigPreset, InitFn } from "./ts-lib/ts-types.ts";
 import BuildData from "./ts-lib/BuildData.ts";
+import ABWebExt from "./ts-lib/ABWebExt.ts";
 
 export default abWeb;
-export { abConfs }
+export { abConfs, ABWebExt }
 export { CopyExt, DistExt, HeaderExt, JSExt, JSLibsExt, ReplaceHeaderExt, SassExt, 
         SpockyExt, TestExt, TSValidatorExt };
 export type { BuildData, ConfigPreset, InitFn };

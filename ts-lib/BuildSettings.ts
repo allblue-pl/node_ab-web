@@ -1,7 +1,7 @@
 import path from "node:path";
 import type { BuildPreset, InitFn } from "./ts-types.ts";
 import ConfigSettings from "./ConfigSettings.ts";
-import type Ext from "./Ext.ts";
+import type ABWebExt from "./ABWebExt.ts";
 
 export default class BuildSettings {
     #buildType: "dev"|"rel";
@@ -14,7 +14,7 @@ export default class BuildSettings {
         return this.#config;
     }
 
-    get exts(): Array<typeof Ext> {
+    get exts(): Array<typeof ABWebExt> {
         return this.#preset.exts;
     }
 

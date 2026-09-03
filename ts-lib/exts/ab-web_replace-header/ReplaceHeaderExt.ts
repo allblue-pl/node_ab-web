@@ -1,11 +1,11 @@
 import path from "node:path";
-import Ext, { ExtPrinter } from "../../Ext.ts";
+import ABWebExt, { ExtPrinter } from "../../ABWebExt.ts";
 import type { ChangeInfos, ExtConfigPreset } from "../../ts-types.ts";
 import type HeaderExt from "../ab-web_header/HeaderExt.ts";
 import fs from "node:fs";
 import type Builder from "../../Builder.ts";
 
-export default class ReplaceHeaderExt extends Ext {
+export default class ReplaceHeaderExt extends ABWebExt {
     #header: HeaderExt;
     #files: Set<string>;
 

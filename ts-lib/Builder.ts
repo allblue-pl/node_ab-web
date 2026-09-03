@@ -5,7 +5,7 @@ import { Task, Tasker } from "ab-tasks";
 
 import BuildData from "./BuildData.ts";
 import BuildSettings from "./BuildSettings.ts";
-import type Ext from "./Ext.ts";
+import type ABWebExt from "./ABWebExt.ts";
 import type { BuildPreset, BuildType } from "./ts-types.ts";
 
 
@@ -13,7 +13,7 @@ export default class Builder {
     #debug: boolean;
     #buildSettings: BuildSettings;
     #buildData: BuildData;
-    #exts: Map<string, Ext>;
+    #exts: Map<string, ABWebExt>;
     #tasker: Tasker;
     #tasks_BuildEnd: Task<undefined>;
     #tasks_Parse: Task<undefined>;
@@ -59,7 +59,7 @@ export default class Builder {
         return this.settings.type === buildType;
     }
 
-    usesExt(extClass: typeof Ext): boolean {
+    usesExt(extClass: typeof ABWebExt): boolean {
         return this.#buildSettings.exts.includes(extClass);
     }
 
@@ -115,7 +115,7 @@ export default class Builder {
     }
 
 
-    _getExt(extName: string): Ext|null {
+    _getExt(extName: string): ABWebExt|null {
         let ext = this.#exts.get(extName);
         if (ext === undefined)
             return null;
@@ -150,7 +150,7 @@ export default class Builder {
     #initExts(): void {
         for (let extClass of this.#buildSettings.exts) {
             // @ts-expect-error
-            let ext = new extClass(this) as Ext; 
+            let ext = new extClass(this) as ABWebExt; 
             this.#exts.set(ext.name, ext);
         }
 

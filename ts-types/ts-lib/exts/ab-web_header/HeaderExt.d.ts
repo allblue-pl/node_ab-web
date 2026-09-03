@@ -1,8 +1,8 @@
 import type Builder from "../../Builder.ts";
-import Ext from "../../Ext.ts";
+import ABWebExt from "../../ABWebExt.ts";
 import type { ExtConfigPreset, GroupsProps } from "../../ts-types.ts";
 import Tag from "./Tag.ts";
-export default class HeaderExt extends Ext {
+export default class HeaderExt extends ABWebExt {
     #private;
     constructor(builder: Builder);
     addScriptUri_Header(groupId: string, scriptUri: string): void;

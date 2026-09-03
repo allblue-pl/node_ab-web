@@ -13,7 +13,7 @@ export default (build: BuildData): BuildData => {
                 },
             }
         ])
-        .extArr(build.data['spocky'].tsPkgs, [
+        .extArr(build.data['js-libs'].tsPkgs, [
             {
                 tsconfig: `${build.devFSPath}/node_modules/spk-tables_presets`,
                 libs: {

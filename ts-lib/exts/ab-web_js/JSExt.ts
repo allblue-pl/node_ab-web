@@ -1,7 +1,7 @@
 import { abMatch as anymatch } from "ab-matcher";
 import path from "node:path";
 import type Builder from "../../Builder.ts";
-import Ext, { ExtPrinter } from "../../Ext.ts";
+import ABWebExt, { ExtPrinter } from "../../ABWebExt.ts";
 import Groups from "../../Groups.ts";
 import type HeaderExt from "../ab-web_header/HeaderExt.ts";
 import abFS from "ab-fs";
@@ -10,7 +10,7 @@ import uglifyJS from "uglify-js";
 import babel from "@babel/core"
 import type { ChangeInfos, ExtConfigPreset, GroupsInfos, GroupsProps } from "../../ts-types.ts";
 
-export default class JSExt extends Ext {
+export default class JSExt extends ABWebExt {
     #header: HeaderExt;
     #jsPath_Tmp: string;
     #jsPath: string;

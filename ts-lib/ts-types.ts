@@ -1,12 +1,12 @@
 import type { WatchEventType } from "ab-fs-watcher/lib/ts-types.js";
 import type BuildData from "./BuildData.ts";
-import type Ext from "./Ext.ts";
+import type ABWebExt from "./ABWebExt.ts";
 
 export type BuildPreset = {
     config: ConfigPreset,
     init: Array<InitFn>,
     initDir: string,
-    exts: Array<typeof Ext>
+    exts: Array<typeof ABWebExt>
 };
 
 export type BuildType = "dev"|"rel";

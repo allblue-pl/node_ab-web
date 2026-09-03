@@ -1,8 +1,8 @@
-import type Ext from "./Ext.ts";
+import type ABWebExt from "./ABWebExt.ts";
 import type { GroupsProps } from "./ts-types.ts";
 export default class Groups<ValueType> {
     #private;
-    constructor(ext: Ext);
+    constructor(ext: ABWebExt);
     add(groupId: string, props: GroupsProps<ValueType>): void;
     addValue(groupId: string, value: ValueType): void;
     clear(groupId: string): void;

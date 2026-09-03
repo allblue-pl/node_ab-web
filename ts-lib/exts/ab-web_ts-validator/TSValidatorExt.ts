@@ -1,9 +1,9 @@
 import { abTSValidator } from "@allblue/ab-ts-parser";
 import type Builder from "../../Builder.ts";
-import Ext, { ExtPrinter } from "../../Ext.ts";
+import ABWebExt, { ExtPrinter } from "../../ABWebExt.ts";
 import type { ChangeInfos, ExtConfigPreset } from "../../ts-types.ts";
 
-export default class TSValidatorExt extends Ext {
+export default class TSValidatorExt extends ABWebExt {
     #print_Errors: Array<string>;
     #projectFSPath: string;
     #tsconfigFSPath: string;

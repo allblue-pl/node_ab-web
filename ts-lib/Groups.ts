@@ -1,13 +1,13 @@
 import type { Value } from "sass";
-import type Ext from "./Ext.ts";
+import type ABWebExt from "./ABWebExt.ts";
 import type { GroupsInfos, GroupsProps } from "./ts-types.ts";
 import { TS0List } from "@allblue/ts0";
 
 export default class Groups<ValueType> {
-    #ext: Ext;
+    #ext: ABWebExt;
     #groups: TS0List<string, GroupsInfos<ValueType>>;
 
-    constructor(ext: Ext) {
+    constructor(ext: ABWebExt) {
         this.#ext = ext;
         this.#groups = new TS0List();
     }

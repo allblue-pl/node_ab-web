@@ -3,11 +3,11 @@ import fs from "node:fs";
 import path from "node:path";
 import * as dartSass from "sass";
 import type Builder from "../../Builder.ts";
-import Ext, { ExtPrinter } from "../../Ext.ts";
+import ABWebExt, { ExtPrinter } from "../../ABWebExt.ts";
 import type { ChangeInfos, ExtConfigPreset } from "../../ts-types.ts";
 import type HeaderExt from "../ab-web_header/HeaderExt.ts";
 
-export default class SassExt extends Ext {
+export default class SassExt extends ABWebExt {
     #cssDir: string;
     #devPath: string;
     #distPath: string;

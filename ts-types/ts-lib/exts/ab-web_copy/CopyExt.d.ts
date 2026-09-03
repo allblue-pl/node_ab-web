@@ -1,7 +1,7 @@
 import type Builder from "../../Builder.ts";
-import Ext, { ExtPrinter } from "../../Ext.ts";
+import ABWebExt, { ExtPrinter } from "../../ABWebExt.ts";
 import type { ChangeInfos, ExtConfigPreset } from "../../ts-types.ts";
-export default class CopyExt extends Ext {
+export default class CopyExt extends ABWebExt {
     #private;
     constructor(builder: Builder);
     __build(): boolean;

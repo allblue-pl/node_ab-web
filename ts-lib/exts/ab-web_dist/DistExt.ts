@@ -1,11 +1,11 @@
 import path from "node:path";
 import type Builder from "../../Builder.ts";
-import Ext, { ExtPrinter } from "../../Ext.ts";
+import ABWebExt, { ExtPrinter } from "../../ABWebExt.ts";
 import type { ChangeInfos, ExtConfigPreset } from "../../ts-types.ts";
 import abFS from "ab-fs";
 import fs from "node:fs";
 
-export default class DistExt extends Ext {
+export default class DistExt extends ABWebExt {
     #path: string;
 
     #print_Copied: Array<string>;

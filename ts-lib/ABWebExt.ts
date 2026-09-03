@@ -9,7 +9,7 @@ import type { ChalkColor, ChangeInfo, ChangeInfos, TaskArgs_OnChange } from "./t
 import type { WatchEventType } from "ab-fs-watcher/lib/ts-types.js";
 import abLog from "ab-log";
 
-export default abstract class Ext {
+export default abstract class ABWebExt {
     #builder: Builder;
     #console: ExtPrinter;
     #debugMessages: Array<Array<any>>;
@@ -171,7 +171,7 @@ export default abstract class Ext {
                 `?v=${settings.buildHash}` : '');
     }
 
-    uses(extName: string): Ext {
+    uses(extName: string): ABWebExt {
         if (this.#initialized)
             throw new Error('Cannot declare used exts after init.');
 
@@ -248,10 +248,10 @@ export class ExtPrinter {
     }
 
 
-    #ext: Ext;
+    #ext: ABWebExt;
 
 
-    constructor(ext: Ext) {
+    constructor(ext: ABWebExt) {
         this.#ext = ext;
     }
 

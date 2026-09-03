@@ -3,7 +3,7 @@ import { Task } from "ab-tasks";
 import type Builder from "./Builder.ts";
 import type { ChalkColor, ChangeInfos } from "./ts-types.ts";
 import type { WatchEventType } from "ab-fs-watcher/lib/ts-types.js";
-export default abstract class Ext {
+export default abstract class ABWebExt {
     #private;
     get builder(): Builder;
     get name(): string;
@@ -26,7 +26,7 @@ export default abstract class Ext {
     printErrors(): void;
     unwatch(watcherName: string): void;
     uri(fsPath: string, addHash?: boolean, error?: string | null): string;
-    uses(extName: string): Ext;
+    uses(extName: string): ABWebExt;
     watch(watcherName: string, eventTypes: Array<WatchEventType>, pathPatterns: Array<string>, ignoreFn?: WatchIgnoreFn | null): void;
     __build(): boolean | Promise<boolean>;
     __clean(): boolean | Promise<boolean>;
@@ -40,7 +40,7 @@ export default abstract class Ext {
 }
 export declare class ExtPrinter {
     #private;
-    constructor(ext: Ext);
+    constructor(ext: ABWebExt);
     color(color: ChalkColor, ...args: Array<string>): void;
     debug(...args: Array<any>): void;
     error(...args: Array<string>): void;

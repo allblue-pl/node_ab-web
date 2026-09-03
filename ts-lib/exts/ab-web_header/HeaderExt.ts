@@ -1,13 +1,13 @@
 import path from "node:path";
 import type Builder from "../../Builder.ts";
-import Ext from "../../Ext.ts";
+import ABWebExt from "../../ABWebExt.ts";
 import Groups from "../../Groups.ts";
 import type { ExtConfigPreset, GroupsProps } from "../../ts-types.ts";
 import abFS from "ab-fs";
 import fs from "node:fs";
 import Tag from "./Tag.ts";
 
-export default class HeaderExt extends Ext {
+export default class HeaderExt extends ABWebExt {
     #script_FilePath: string;
 
     #postBody_FilePath: string;

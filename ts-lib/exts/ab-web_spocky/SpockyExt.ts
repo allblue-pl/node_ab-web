@@ -1,4 +1,4 @@
-import Ext, { ExtPrinter } from "../../Ext.ts";
+import ABWebExt, { ExtPrinter } from "../../ABWebExt.ts";
 import JSLibsExt from "../ab-web_js-libs/JSLibsExt.ts";
 import type Builder from "../../Builder.ts";
 import path from "node:path";
@@ -9,7 +9,7 @@ import LayoutParser from "./LayoutParser.ts";
 import { presets_JSPkgInfos, presets_TSPkgInfos, type JSPkgInfos, type TSPkgInfos } from "../ab-web_js-libs/ts-types.ts";
 import ts0 from "@allblue/ts0";
 
-export default class SpockyExt extends Ext {
+export default class SpockyExt extends ABWebExt {
     #jsLibs: JSLibsExt;
 
     #modulePath = null;
@@ -82,7 +82,7 @@ export default class SpockyExt extends Ext {
             content += `            return ${layoutName}.Content;\r\n`;
         }
 
-        content += `\r\n        throw new Error("Layout '\${layoutName}' does not exist.");\r\n`;
+        content += `\r\n        throw new Error(\`Layout '\${layoutName}' does not exist.\`);\r\n`;
         content += `    }\r\n`
 
         content +=  `\r\n    getLayoutClass(layoutName` + (jsLibInfo.type === "ts" ? `: string` : "") + 
@@ -94,7 +94,7 @@ export default class SpockyExt extends Ext {
             content += `            return ${layoutName};\r\n`;
         }
 
-        content += `\r\n        throw new Error("Layout '\${layoutName}' does not exist.");\r\n`;
+        content += `\r\n        throw new Error(\`Layout '\${layoutName}' does not exist.\`);\r\n`;
         content += `    }\r\n`
 
         content += `}\r\n`;

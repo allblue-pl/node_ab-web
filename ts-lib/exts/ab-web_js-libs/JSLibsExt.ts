@@ -1,6 +1,6 @@
 import path from "node:path";
 import type Builder from "../../Builder.ts";
-import Ext, { ExtPrinter } from "../../Ext.ts";
+import ABWebExt, { ExtPrinter } from "../../ABWebExt.ts";
 import type JSExt from "../ab-web_js/JSExt.ts";
 import fs from "node:fs";
 import { presets_JSPkgInfos, presets_TSPkgInfos, type JSPkgInfos, type LibInfo, type ScriptInfo, type TSPkgInfos } from "./ts-types.ts";
@@ -8,7 +8,7 @@ import type { ChangeInfos, ExtConfigPreset } from "../../ts-types.ts";
 import ts0, { ts0Assert } from "@allblue/ts0";
 import { JSLibsBuilder } from "js-libs";
 
-export default class JSLibsExt extends Ext {
+export default class JSLibsExt extends ABWebExt {
     #js: JSExt;
 
     #buildFSPath: string|null;
