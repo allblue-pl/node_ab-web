@@ -21,6 +21,7 @@ export declare class abConfs_Class {
     get abQrCodesGenerator(): ExtInit;
     get abResourcePreloader(): ExtInit;
     get abStrings(): ExtInit;
+    get abTags(): ExtInit;
     get abTextParser(): ExtInit;
     get abText(): ExtInit;
     get abTime(): ExtInit;

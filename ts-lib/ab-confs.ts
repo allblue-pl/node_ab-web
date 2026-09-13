@@ -43,6 +43,7 @@ import ts0 from "./confs/ts0.ts";
 import webABApi from "./confs/web-ab-api.ts";
 import type ABWebExt from "./ABWebExt.ts";
 import type { ExtInit } from "./ts-types.ts";
+import abTags from "./confs/ab-tags.ts";
 
 export class abConfs_Class {
     get abBootstrapDatetimepicker(): ExtInit {
@@ -104,6 +105,9 @@ export class abConfs_Class {
     }
     get abStrings(): ExtInit {
         return abStrings;
+    }
+    get abTags(): ExtInit {
+        return abTags;
     }
     get abTextParser(): ExtInit {
         return abTextParser;
