@@ -35,6 +35,7 @@ export declare class abConfs_Class {
     get js0(): ExtInit;
     get moment(): ExtInit;
     get sortablejs(): ExtInit;
+    get spkEFilesUpload(): ExtInit;
     get spkFileUpload(): ExtInit;
     get spkForms(): ExtInit;
     get spkLemonBee(): ExtInit;

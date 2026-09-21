@@ -2,7 +2,7 @@ import { type WatchIgnoreFn } from "ab-fs-watcher";
 import { Task } from "ab-tasks";
 import type Builder from "./Builder.ts";
 import type { ChalkColor, ChangeInfos } from "./ts-types.ts";
-import type { WatchEventType } from "ab-fs-watcher/lib/ts-types.js";
+import type { WatchEventType } from "ab-fs-watcher";
 export default abstract class ABWebExt {
     #private;
     get builder(): Builder;

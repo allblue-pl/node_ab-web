@@ -1,5 +1,5 @@
 import ts0, { type TS0ValueType } from "@allblue/ts0";
-import type { WatchEventType } from "ab-fs-watcher/lib/ts-types.js";
+import type { WatchEventType } from "ab-fs-watcher";
 
 export type LibInfo = {
     type: "js",

@@ -1,13 +1,15 @@
 import type BuildData from "../BuildData.ts";
+import moment from "./moment.ts";
 
-export default (build: BuildData, espadaFSPath: string): BuildData => {
+export default (build: BuildData): BuildData => {
     return build
+        .init(moment)
         .extArr(build.data['js-libs'].tsPkgs, [
-            {   
-                tsconfig: null,
+            {
+                tsconfig: `${build.devFSPath}/node_modules/@allblue/e-libs`,
                 libs: {
-                    "e-libs": `${espadaFSPath}/esite/packages/ecore/ELibs/js-libs/e-libs`,
+                    "@allblue/e-libs": `${build.devFSPath}/node_modules/@allblue/e-libs`,
                 },
             }
-        ]);   
+        ]);
 }

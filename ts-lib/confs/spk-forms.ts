@@ -9,9 +9,6 @@ export default (build: BuildData): BuildData => {
         .init(abDate)
         .init(abBootstrapDatetimepicker)
         .init(ts0)
-        .extArr(build.data['sass']['paths'], [
-            build.devFSPath + '/node_modules/spk-file-upload/scss',
-        ])
         .extArr(build.data['spocky']['tsPkgs'], [
             {
                 tsconfig: `${build.devFSPath}/node_modules/spk-forms`,

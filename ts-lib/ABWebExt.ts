@@ -6,7 +6,7 @@ import path from "node:path";
 import type Builder from "./Builder.ts";
 import type ConfigSettings from "./ConfigSettings.ts";
 import type { ChalkColor, ChangeInfo, ChangeInfos, TaskArgs_OnChange } from "./ts-types.ts";
-import type { WatchEventType } from "ab-fs-watcher/lib/ts-types.js";
+import type { WatchEventType } from "ab-fs-watcher";
 import abLog from "ab-log";
 
 export default abstract class ABWebExt {

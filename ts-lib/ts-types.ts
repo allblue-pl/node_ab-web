@@ -1,4 +1,4 @@
-import type { WatchEventType } from "ab-fs-watcher/lib/ts-types.js";
+import type { WatchEventType } from "ab-fs-watcher";
 import type BuildData from "./BuildData.ts";
 import type ABWebExt from "./ABWebExt.ts";
 

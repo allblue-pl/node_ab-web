@@ -1,3 +1,4 @@
+import type ABWebExt from "./ABWebExt.ts";
 import type BuildData from "./BuildData.ts";
 import abBootstrapDatetimepicker from "./confs/ab-bootstrap-datetimepicker.ts";
 import abBootstrap from "./confs/ab-bootstrap.ts";
@@ -19,19 +20,21 @@ import abPager from "./confs/ab-pager.ts";
 import abQrCodesGenerator from "./confs/ab-qr-codes-generator.ts";
 import abResourcePreloader from "./confs/ab-resource-preloader.ts";
 import abStrings from "./confs/ab-strings.ts";
+import abTags from "./confs/ab-tags.ts";
 import abTextParser from "./confs/ab-text-parser.ts";
 import abText from "./confs/ab-text.ts";
 import abTime from "./confs/ab-time.ts";
 import abTimer from "./confs/ab-timer.ts";
 import abWebScroller from "./confs/ab-web-scroller.ts";
-import eSpkLemonBee from "./confs/e-spk-lemon-bee.ts";
 import eLibs from "./confs/e-libs.ts";
+import eSpkLemonBee from "./confs/e-spk-lemon-bee.ts";
 import eTasks from "./confs/e-tasks.ts";
 import fontAwesome from "./confs/font-awesome.ts";
 import jquery from "./confs/jquery.ts";
 import js0 from "./confs/js0.ts";
 import moment from "./confs/moment.ts";
 import sortablejs from "./confs/sortablejs.ts";
+import spkEFilesUpload from "./confs/spk-e-files-upload.ts";
 import spkFileUpload from "./confs/spk-file-upload.ts";
 import spkForms from "./confs/spk-forms.ts";
 import spkLemonBee from "./confs/spk-lemon-bee.ts";
@@ -41,9 +44,7 @@ import spkTinymce from "./confs/spk-tinymce.ts";
 import spocky from "./confs/spocky.ts";
 import ts0 from "./confs/ts0.ts";
 import webABApi from "./confs/web-ab-api.ts";
-import type ABWebExt from "./ABWebExt.ts";
 import type { ExtInit } from "./ts-types.ts";
-import abTags from "./confs/ab-tags.ts";
 
 export class abConfs_Class {
     get abBootstrapDatetimepicker(): ExtInit {
@@ -147,6 +148,9 @@ export class abConfs_Class {
     }
     get sortablejs(): ExtInit {
         return sortablejs;
+    }
+    get spkEFilesUpload(): ExtInit {
+        return spkEFilesUpload;
     }
     get spkFileUpload(): ExtInit {
         return spkFileUpload;
