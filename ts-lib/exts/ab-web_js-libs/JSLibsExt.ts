@@ -193,8 +193,9 @@ export default class JSLibsExt extends ABWebExt {
         let libInfo = this.#libInfos.get(scriptInfo.libName);
         ts0Assert(libInfo !== undefined, `Lib '${scriptInfo.libName}' does not exist.`);
 
-        this.#libBuilder.removeScript(libInfo.libFSPath, scriptInfo.scriptFSPath, 
-                path.join(this.#buildFSPath, scriptInfo.libName));
+        let destFSPath = this.#libBuilder.removeScript(libInfo.libFSPath, 
+                scriptInfo.scriptFSPath, path.join(this.#buildFSPath, scriptInfo.libName));
+        this.#js.removeScript(`js-libs.${scriptInfo.libName}`, destFSPath);
     }
 
 
@@ -203,6 +204,11 @@ export default class JSLibsExt extends ABWebExt {
         let buildPromises: Array<Promise<boolean>> = [];
         let buildJS: boolean = false;
         for (let scriptInfo of this.#scriptsToBuild) {
+            if (scriptInfo.eventTypes.includes("add") && 
+                    scriptInfo.eventTypes.includes("unlink") &&
+                    scriptInfo.eventTypes[scriptInfo.eventTypes.length - 1] === "add")
+                scriptInfo.eventTypes = [ "change" ];
+            
             if (scriptInfo.eventTypes.includes("add") || 
                     scriptInfo.eventTypes.includes("unlink")) {
                 buildJS = true;

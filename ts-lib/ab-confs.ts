@@ -2,6 +2,7 @@ import type ABWebExt from "./ABWebExt.ts";
 import type BuildData from "./BuildData.ts";
 import abBootstrapDatetimepicker from "./confs/ab-bootstrap-datetimepicker.ts";
 import abBootstrap from "./confs/ab-bootstrap.ts";
+import abColorPicker from "./confs/ab-color-picker.ts";
 import abCookies from "./confs/ab-cookies.ts";
 import abDataNative from "./confs/ab-data-native.ts";
 import abDataWeb from "./confs/ab-data-web.ts";
@@ -52,6 +53,9 @@ export class abConfs_Class {
     } 
     get abBootstrap(): ExtInit {
         return abBootstrap;
+    }
+    get abColorPicker(): ExtInit {
+        return abColorPicker;
     }
     get abCookies(): ExtInit {
         return abCookies;
@@ -128,7 +132,7 @@ export class abConfs_Class {
     get eSpkLemonBee(): ExtInit {
         return eSpkLemonBee;
     }
-    get eLibs(): (build: BuildData, espadaFSPath: string) => BuildData {
+    get eLibs(): ExtInit {
         return eLibs;
     }
     get eTasks(): ExtInit {

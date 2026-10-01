@@ -1,8 +1,8 @@
-import type BuildData from "./BuildData.ts";
 import type { ExtInit } from "./ts-types.ts";
 export declare class abConfs_Class {
     get abBootstrapDatetimepicker(): ExtInit;
     get abBootstrap(): ExtInit;
+    get abColorPicker(): ExtInit;
     get abCookies(): ExtInit;
     get abDataNative(): ExtInit;
     get abDataWeb(): ExtInit;
@@ -28,7 +28,7 @@ export declare class abConfs_Class {
     get abTimer(): ExtInit;
     get abWebScroller(): ExtInit;
     get eSpkLemonBee(): ExtInit;
-    get eLibs(): (build: BuildData, espadaFSPath: string) => BuildData;
+    get eLibs(): ExtInit;
     get eTasks(): ExtInit;
     get fontAwesome(): ExtInit;
     get jquery(): ExtInit;
