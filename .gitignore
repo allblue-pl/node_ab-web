@@ -1,19 +1,16 @@
-### System / Windows
+### Typescript
+tsconfig.tsbuildinfo
 
+### System / Windows
 Thumbs.db
 
-
 ### Local
-
 /.local
-
 
 ### Links
 .npm-links
 
-
 ### Node
-
 # Logs
 logs
 *.log

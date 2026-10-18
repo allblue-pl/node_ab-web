@@ -1,7 +1,6 @@
 import path from "node:path";
-import { Document } from "ab-xml-parser";
+import { Document, type ElemType } from "ab-xml-parser";
 import fs from "node:fs";
-import type { ElemType } from "ab-xml-parser/lib/ts-types.js";
 
 export default class LayoutParser {
     static ParseFields(content: string): Array<string> {
@@ -76,6 +75,8 @@ export default class ${layoutName} extends Layout {
 
     constructor(defaultFieldValues: TS0RawObject = {}) {
         super(${layoutName}.Content, defaultFieldValues);
+
+        this.$fields.LayoutName = "${layoutName}";
     }
 }
 `
